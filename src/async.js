@@ -248,8 +248,8 @@ class AsyncSRT {
    * @param {number} option
    * @param {number} value
    */
-  setSockOpt(socket, option, value, callback) {
-    return this._createAsyncWorkPromise("setSockOpt", [socket, option, value], callback);
+  setSockFlag(socket, option, value, callback) {
+    return this._createAsyncWorkPromise("setSockFlag", [socket, option, value], callback);
   }
 
   /**
@@ -257,8 +257,8 @@ class AsyncSRT {
    * @param {number} socket
    * @param {number} option
    */
-  getSockOpt(socket, option, callback) {
-    return this._createAsyncWorkPromise("getSockOpt", [socket, option], callback);
+  getSockFlag(socket, option, callback) {
+    return this._createAsyncWorkPromise("getSockFlag", [socket, option], callback);
   }
 
   /**

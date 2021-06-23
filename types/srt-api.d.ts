@@ -176,14 +176,14 @@ export class SRT {
    * @param option
    * @param value
    */
-  setSockOpt(socket: number, option: SRTSockOpt, value: SRTSockOptValue): SRTResult
+  setSockFlag(socket: number, option: SRTSockOpt, value: SRTSockOptValue): SRTResult
 
   /**
    *
    * @param socket
    * @param option
    */
-  getSockOpt(socket: number, option: SRTSockOpt): SRTSockOptValue
+  getSockFlag(socket: number, option: SRTSockOpt): SRTSockOptValue
 
   /**
    *

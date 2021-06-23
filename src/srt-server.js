@@ -226,7 +226,7 @@ class SRTServer extends EventEmitter {
       throw new Error('opts and values must have same length');
     const promises = [];
     opts.forEach((opt, index) => {
-      const p = this._asyncSrt.setSockOpt(this.socket, opt, values[index]);
+      const p = this._asyncSrt.setSockFlag(this.socket, opt, values[index]);
       promises.push(p);
     })
     return Promise.all(promises);

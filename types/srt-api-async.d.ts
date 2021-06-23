@@ -72,14 +72,14 @@ export class AsyncSRT {
    * @param option
    * @param value
    */
-  setSockOpt(socket: number, option: SRTSockOpt, value: SRTSockOptValue, callback?: AsyncSRTCallback<SRTResult>): Promise<SRTResult>
+  setSockFlag(socket: number, option: SRTSockOpt, value: SRTSockOptValue, callback?: AsyncSRTCallback<SRTResult>): Promise<SRTResult>
 
   /**
    *
    * @param socket
    * @param option
    */
-  getSockOpt(socket: number, option: SRTSockOpt, callback?: AsyncSRTCallback<SRTSockOptValue>): Promise<SRTSockOptValue>
+  getSockFlag(socket: number, option: SRTSockOpt, callback?: AsyncSRTCallback<SRTSockOptValue>): Promise<SRTSockOptValue>
 
   /**
    *

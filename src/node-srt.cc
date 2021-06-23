@@ -26,8 +26,8 @@ Napi::Object NodeSRT::Init(Napi::Env env, Napi::Object exports) {
     InstanceMethod("close", &NodeSRT::Close),
     InstanceMethod("read", &NodeSRT::Read),
     InstanceMethod("write", &NodeSRT::Write),
-    InstanceMethod("setSockOpt", &NodeSRT::SetSockOpt),
-    InstanceMethod("getSockOpt", &NodeSRT::GetSockOpt),
+    InstanceMethod("setSockFlag", &NodeSRT::SetSockFlag),
+    InstanceMethod("getSockFlag", &NodeSRT::GetSockFlag),
     InstanceMethod("getSockState", &NodeSRT::GetSockState),
     InstanceMethod("epollCreate", &NodeSRT::EpollCreate),
     InstanceMethod("epollAddUsock", &NodeSRT::EpollAddUsock),
@@ -241,7 +241,7 @@ Napi::Value NodeSRT::Write(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, result);
 }
 
-Napi::Value NodeSRT::SetSockOpt(const Napi::CallbackInfo& info) {
+Napi::Value NodeSRT::SetSockFlag(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
@@ -271,7 +271,7 @@ Napi::Value NodeSRT::SetSockOpt(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, result);
 }
 
-Napi::Value NodeSRT::GetSockOpt(const Napi::CallbackInfo& info) {
+Napi::Value NodeSRT::GetSockFlag(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
@@ -285,22 +285,23 @@ Napi::Value NodeSRT::GetSockOpt(const Napi::CallbackInfo& info) {
   int result = SRT_ERROR;
 
   switch((SRT_SOCKOPT)optName) {
-    case SRTO_MSS:
     case SRTO_CONNTIMEO:
     case SRTO_EVENT:
     case SRTO_FC:
-    case SRTO_INPUTBW:
+    //case SRTO_GROUPCONNECT:
+    //case SRTO_GROUPSTABTIMEO:
+    //case SRTO_GROUPTYPE:
     case SRTO_IPTOS:
-    case SRTO_ISN:
     case SRTO_IPTTL:
     case SRTO_IPV6ONLY:
-    case SRTO_KMREFRESHRATE:
+    case SRTO_ISN:
     case SRTO_KMPREANNOUNCE:
+    case SRTO_KMREFRESHRATE:
     case SRTO_KMSTATE:
     case SRTO_LATENCY:
     case SRTO_LOSSMAXTTL:
-    case SRTO_MAXBW:
     case SRTO_MINVERSION:
+    case SRTO_MSS:
     case SRTO_OHEADBW:
     case SRTO_PAYLOADSIZE:
     case SRTO_PBKEYLEN:
@@ -309,16 +310,17 @@ Napi::Value NodeSRT::GetSockOpt(const Napi::CallbackInfo& info) {
     case SRTO_PEERVERSION:
     case SRTO_RCVBUF:
     case SRTO_RCVDATA:
+    case SRTO_RCVKMSTATE:
     case SRTO_RCVLATENCY:
     case SRTO_RCVTIMEO:
+    case SRTO_RETRANSMITALGO:
     case SRTO_SNDBUF:
     case SRTO_SNDDATA:
     case SRTO_SNDDROPDELAY:
+    case SRTO_SNDKMSTATE:
     case SRTO_SNDTIMEO:
     case SRTO_STATE:
-    case SRTO_ENFORCEDENCRYPTION:
-    case SRTO_TLPKTDROP:
-    case SRTO_TSBPDMODE:
+    //case SRTO_TRANSTYPE:
     case SRTO_UDP_RCVBUF:
     case SRTO_UDP_SNDBUF:
     case SRTO_VERSION:
@@ -329,12 +331,27 @@ Napi::Value NodeSRT::GetSockOpt(const Napi::CallbackInfo& info) {
       returnVal = Napi::Value::From(env, optValue);
       break;
     }
-    case SRTO_RCVSYN:
+    case SRTO_INPUTBW:
+    case SRTO_MAXBW:
+    case SRTO_MININPUTBW:
+    {
+      int64_t optValue;
+      int optSize = sizeof(optValue);
+      result = srt_getsockflag(socketValue, (SRT_SOCKOPT)optName, (void *)&optValue, &optSize);
+      returnVal = Napi::Value::From(env, optValue);
+      break;
+    }
+    case SRTO_DRIFTTRACER:
+    case SRTO_ENFORCEDENCRYPTION:
     case SRTO_MESSAGEAPI:
     case SRTO_NAKREPORT:
+    case SRTO_RCVSYN:
     case SRTO_RENDEZVOUS:
+    case SRTO_REUSEADDR:
     case SRTO_SENDER:
     case SRTO_SNDSYN:
+    case SRTO_TLPKTDROP:
+    case SRTO_TSBPDMODE:
     {
       bool optValue;
       int optSize = sizeof(optValue);
@@ -342,12 +359,20 @@ Napi::Value NodeSRT::GetSockOpt(const Napi::CallbackInfo& info) {
       returnVal = Napi::Value::From(env, optValue);
       break;
     }
+    case SRTO_BINDTODEVICE:
+    case SRTO_CONGESTION:
     case SRTO_PACKETFILTER:
-    case SRTO_PASSPHRASE:
+    //case SRTO_PASSPHRASE:
+    case SRTO_STREAMID:
     {
       char optValue[512];
       int optSize = sizeof(optValue);
-      result = srt_getsockflag(socketValue, (SRT_SOCKOPT)optName, (void *)&optValue, &optSize);
+      result = srt_getsockflag(socketValue, (SRT_SOCKOPT)optName, &optValue[0], &optSize);
+      /*for (int ji = 0; ji < 512; ji++)
+      {
+        std::cout << optValue[ji] << " ";
+      }
+      std::cout << "\n";*/
       returnVal = Napi::Value::From(env, std::string(optValue));
       break;
     }

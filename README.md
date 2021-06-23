@@ -55,8 +55,8 @@ class SRT {
   close(socket:Number): result:Number
   read(socket:Number, chunkSize:Number): chunk:Buffer
   write(socket:Number, chunk:Buffer): result:Number
-  setSockOpt(socket:Number, option:Number, value): result:Number
-  getSockOpt(socket:Number, option:Number): value
+  setSockFlag(socket:Number, option:Number, value): result:Number
+  getSockFlag(socket:Number, option:Number): value
   getSockState(socket:Number): value:Number
   epollCreate(): epid:Number
   epollAddUsock(epid:Number, socket:Number, events:Number): result:Number

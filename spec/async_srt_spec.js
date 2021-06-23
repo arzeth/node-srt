@@ -31,9 +31,9 @@ describe("Async SRT API with callbacks", () => {
   it("can set SRT sockopt SRTO_MSS", done => {
     const asyncSrt = new AsyncSRT();
     asyncSrt.createSocket(false, (socket) => {
-      asyncSrt.setSockOpt(socket, SRT.SRTO_MSS, 1052, (result) => {
+      asyncSrt.setSockFlag(socket, SRT.SRTO_MSS, 1052, (result) => {
         expect(result).not.toEqual(SRT.ERROR);
-        asyncSrt.getSockOpt(socket, SRT.SRTO_MSS, (value) => {
+        asyncSrt.getSockFlag(socket, SRT.SRTO_MSS, (value) => {
           expect(value).toEqual(1052);
           done();
         });
@@ -44,9 +44,9 @@ describe("Async SRT API with callbacks", () => {
   it("can set SRT socket in non-blocking mode", done => {
     const asyncSrt = new AsyncSRT();
     asyncSrt.createSocket(false, (socket) => {
-      asyncSrt.setSockOpt(socket, SRT.SRTO_RCVSYN, false, (result) => {
+      asyncSrt.setSockFlag(socket, SRT.SRTO_RCVSYN, false, (result) => {
         expect(result).not.toEqual(SRT.ERROR);
-        asyncSrt.getSockOpt(socket, SRT.SRTO_RCVSYN, (value) => {
+        asyncSrt.getSockFlag(socket, SRT.SRTO_RCVSYN, (value) => {
           expect(value).toEqual(false);
           done();
         });
@@ -57,7 +57,7 @@ describe("Async SRT API with callbacks", () => {
   it("can setup non-blocking event poll", done => {
     const asyncSrt = new AsyncSRT();
     asyncSrt.createSocket(false, (socket) => {
-      asyncSrt.setSockOpt(socket, SRT.SRTO_RCVSYN, false, () => {
+      asyncSrt.setSockFlag(socket, SRT.SRTO_RCVSYN, false, () => {
         asyncSrt.bind(socket, "0.0.0.0", 1235, () => {
           asyncSrt.listen(socket, 10, () => {
             asyncSrt.epollCreate((epid) => {
