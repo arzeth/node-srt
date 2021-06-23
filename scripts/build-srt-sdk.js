@@ -19,7 +19,7 @@ const srtCheckout = env.NODE_SRT_CHECKOUT || SRT_CHECKOUT;
 
 const depsPath = path.join(__dirname, '../', 'deps');
 const srtSourcePath = path.join(depsPath, 'srt');
-const buildDir = path.join(depsPath, 'build'); // FIXME: name this srt-build (in case other deps come up)
+const buildDir = path.join(depsPath, 'build');
 const numCpus = os.cpus().length; // NOTE: not the actual physical cores amount btw, see https://www.npmjs.com/package/physical-cpu-count
 
 if (!fs.existsSync(depsPath)) {
@@ -44,12 +44,13 @@ if (!fs.existsSync(srtSourcePath)) {
 }
 
 function build() {
-  console.log('Building SRT SDK and prerequisites for current platform:', process.platform);
   switch (process.platform) {
   case "win32":
+    console.log('Building SRT SDK and prerequisites for current platform:', process.platform);
     buildWin32();
     break;
   default:
+    console.log('Building SRT SDK for current platform:', process.platform);
     buildNx();
   }
 }
