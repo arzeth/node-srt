@@ -42,10 +42,10 @@ describe("SRT library", () => {
   it("can set SRT sockopt SRTO_STREAMID", () => {
     const srt = new SRT();
     const socket = srt.createSocket();
-    const result = srt.setSockOpt(socket, SRT.SRTO_STREAMID, "STREAMID");
+    const result = srt.setSockFlag(socket, SRT.SRTO_STREAMID, "STREAMID");
 
     expect(result).not.toEqual(SRT.ERROR);
-    const value = srt.getSockOpt(socket, SRT.SRTO_STREAMID);
+    const value = srt.getSockFlag(socket, SRT.SRTO_STREAMID);
 
     expect(value).toEqual("STREAMID");
   });

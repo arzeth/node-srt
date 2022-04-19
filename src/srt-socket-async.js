@@ -115,7 +115,7 @@ class SRTSocketAsync extends EventEmitter {
     if (opts.length !== values.length)
       throw new Error('opts and values must have same length');
     const promises = opts.map((opt, index) => {
-      return this._asyncSrt.setSockOpt(this.socket, opt, values[index]);
+      return this._asyncSrt.setSockFlag(this.socket, opt, values[index]);
     });
     return Promise.all(promises);
   }
