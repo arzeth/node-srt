@@ -31,7 +31,6 @@ async function readChunks(asyncSrt, socketFd, minBytesRead, readBufSize = READ_B
     } else if (anyFailures) {
       // evade an infinite loop
       return chunks
-    }
     } else if (readReturn === SRT.ERROR || readReturn === null) {
       if (onError) {
         onError(readReturn);
