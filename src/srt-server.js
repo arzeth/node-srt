@@ -17,7 +17,7 @@ const SOCKET_LISTEN_BACKLOG_SIZE = 0xFFFF;
 /**
  * @emits data
  * @emits closing
- * @emits closeds
+ * @emits closed
  */
 class SRTServerConnection extends EventEmitter {
   /**

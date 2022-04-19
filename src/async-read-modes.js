@@ -1,3 +1,5 @@
+const { SRT } = require('./srt');
+
 const READ_BUF_SIZE = 16 * 1024;
 
 /**
@@ -16,6 +18,7 @@ async function readChunks(asyncSrt, socketFd, minBytesRead, readBufSize = READ_B
   onRead = null, onError = null) {
   let bytesRead = 0;
   const chunks = [];
+  let anyFailures = false;
   while (bytesRead < minBytesRead) {
     const readReturn = await asyncSrt.read(socketFd, readBufSize);
     if (readReturn instanceof Uint8Array) {
@@ -25,6 +28,10 @@ async function readChunks(asyncSrt, socketFd, minBytesRead, readBufSize = READ_B
         onRead(readBuf);
       }
       chunks.push(readBuf);
+    } else if (anyFailures) {
+      // evade an infinite loop
+      return chunks
+    }
     } else if (readReturn === SRT.ERROR || readReturn === null) {
       if (onError) {
         onError(readReturn);
