@@ -25,12 +25,12 @@ async function readChunks(asyncSrt, socketFd, minBytesRead, readBufSize = READ_B
         onRead(readBuf);
       }
       chunks.push(readBuf);
-    } else if (result === SRT.ERROR || result === null) {
+    } else if (readReturn === SRT.ERROR || readReturn === null) {
       if (onError) {
-        onError(result);
+        onError(readReturn);
       }
     } else {
-      throw new Error(`Got unexpected read-result: ${result}`)
+      throw new Error(`Got unexpected read-result: ${readReturn}`)
     }
   }
   return chunks;
