@@ -122,7 +122,7 @@ class SRTServerConnection extends EventEmitter {
     if (result === SRT.ERROR) {
       throw new Error('Failed to close connection-fd:', this.fd);
     }
-    this.fd = null;
+    this._fd = null;
     this.emit('closed', result);
     this.removeAllListeners();
     return result;
