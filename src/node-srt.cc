@@ -271,7 +271,7 @@ Napi::Value NodeSRT::SetSockFlag(const Napi::CallbackInfo& info) {
       Napi::String value = info[2].As<Napi::String>();
       int32_t optName = option;
       const char * optValue = std::string(value).c_str();
-      result = srt_setsockflag(socketValue, (SRT_SOCKOPT)optName, optValue, sizeof(string));
+      result = srt_setsockflag(socketId, (SRT_SOCKOPT)optName, optValue, sizeof(string));
       if (result == SRT_ERROR) {
         Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
         return Napi::Number::New(env, SRT_ERROR);
@@ -346,7 +346,7 @@ Napi::Value NodeSRT::GetSockFlag(const Napi::CallbackInfo& info) {
     {
       int64_t optValue;
       int optSize = sizeof(optValue);
-      result = srt_getsockflag(socketValue, (SRT_SOCKOPT)optName, (void *)&optValue, &optSize);
+      result = srt_getsockflag(socketId, (SRT_SOCKOPT)optName, (void *)&optValue, &optSize);
       returnVal = Napi::Value::From(env, optValue);
       break;
     }
@@ -368,11 +368,15 @@ Napi::Value NodeSRT::GetSockFlag(const Napi::CallbackInfo& info) {
       returnVal = Napi::Value::From(env, optValue);
       break;
     }
+    case SRTO_BINDTODEVICE:
+    case SRTO_CONGESTION:
     case SRTO_PACKETFILTER:
+    //case SRTO_PASSPHRASE:
+    case SRTO_STREAMID:
     {
       char optValue[512];
       int optSize = sizeof(optValue);
-      result = srt_getsockflag(socketValue, (SRT_SOCKOPT)optName, (void *)&optValue, &optSize);
+      result = srt_getsockflag(socketId, (SRT_SOCKOPT)optName, (void *)&optValue, &optSize);
       returnVal = Napi::Value::From(env, std::string(optValue));
       break;
     }
