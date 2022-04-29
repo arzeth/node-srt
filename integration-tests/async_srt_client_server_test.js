@@ -16,7 +16,7 @@ const testFiles = [
   "data/SpringBlenderOpenMovie.mp4.ts"
 ]
 
-jest && jest.setTimeout(5000)
+jest && jest.setTimeout(3000)
 
 describe("AsyncSRT to SRTServer one-way transmission", () => {
   it("should transmit data written (yielding-loop)", async done => {
