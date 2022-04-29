@@ -228,7 +228,6 @@ Napi::Value NodeSRT::Write(const Napi::CallbackInfo& info) {
 
   Napi::Number socketValue = info[0].As<Napi::Number>();
 
-  // Q: why not using char as data/template type?
   Napi::Buffer<uint8_t> chunk = info[1].As<Napi::Buffer<uint8_t>>();
 
   int result = srt_sendmsg2(socketValue, (const char *)chunk.Data(), chunk.Length(), nullptr);
