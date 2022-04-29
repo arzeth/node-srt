@@ -48,7 +48,7 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
   const bytesShouldSendTotal
     = Math.min(numChunks * chunkMaxSize, sourceDataBuf.byteLength);
 
-  const clientWritesPerTick = 128;
+  const clientWritesPerTick = 16; // increasing this beyond certain levels leading to > 100Mbit/s thruput has libSRT drop packets internally
 
   log(`Read ${sourceDataBuf.byteLength} bytes from file into buffer in ${fileReadTimeDiffMs.toFixed(3)} ms`);
 
