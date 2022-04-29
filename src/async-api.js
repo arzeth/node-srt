@@ -229,7 +229,7 @@ class AsyncSRT {
    * When consuming from a larger piece of data,
    * chunks written will need to be slice copies of the source buffer.
    *
-   * For a usage example, check the performance & smoke testbench.
+   * For a usage example, see integration-tests setup.
    *
    * @param {number} socket Socket identifier to write to
    * @param {Buffer | Uint8Array} chunk The underlying `buffer` (ArrayBufferLike) will get "neutered" by creating the async task. Pass in or use a copy respectively if concurrent data usage is intended.
