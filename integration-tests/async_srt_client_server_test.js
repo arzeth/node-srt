@@ -30,6 +30,8 @@ describe("AsyncSRT to SRTServer one-way transmission", () => {
 
 async function transmitClientToServerLoopback(localServerPort, done, useExplicitScheduling) {
 
+  const log = console.log.bind(console, `localServerPort: ${localServerPort} > `);
+
   const fileReadStartTime = now();
 
   const sourceDataBuf = fs.readFileSync(path.resolve(__dirname, testFiles[0]))
@@ -38,19 +40,21 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
   const localServerBindIface = '127.0.0.1';
   const chunkMaxSize = 1024;
   const numChunks = 8 * 1024;
-  // type size NodeJS-internal readable grabs in binary streams
+
   const readBufSize = 1024 * 1024;
+
   const bytesShouldSendTotal
     = Math.min(numChunks * chunkMaxSize, sourceDataBuf.byteLength);
 
   const clientWritesPerTick = 128;
 
-  console.log(`Read ${sourceDataBuf.byteLength} bytes from file into buffer in ${fileReadTimeDiffMs.toFixed(3)} ms`);
+  log(`Read ${sourceDataBuf.byteLength} bytes from file into buffer in ${fileReadTimeDiffMs.toFixed(3)} ms`);
 
   const packetDataSlicingStartTime = now();
   const chunks = sliceBufferToChunks(sourceDataBuf, chunkMaxSize, bytesShouldSendTotal);
   const packetDataSlicingTimeD = now() - packetDataSlicingStartTime;
-  console.log('Pre-slicing packet data took millis:', packetDataSlicingTimeD);
+
+  log('Pre-slicing packet data took millis:', packetDataSlicingTimeD);
 
   // we need two instances of task-runners here,
   // because otherwise awaiting server accept
@@ -65,13 +69,11 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
   const asyncSrtClient = new AsyncSRT();
 
   const [clientSideSocket] = await Promise.all([
-    asyncSrtClient.createSocket(), // we could also use the server-runner here. doesnt matter.
+    asyncSrtClient.createSocket(), // we could also use the server-runner here.
     asyncSrtServer.create().then(s => s.open())
   ]);
 
-  console.log('Got socket handles (client/server):',
-    clientSideSocket, '/',
-    asyncSrtServer.socket);
+  log('Got socket handles (client/server):', clientSideSocket, '/', asyncSrtServer.socket);
 
   clientWriteToConnection();
 
@@ -88,7 +90,7 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
       throw new Error('client connect failed');
     }
 
-    console.log('connect result:', result)
+    log('Connect result:', result)
 
     clientWriteStartTime = now();
 
@@ -100,18 +102,27 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
         clientSideSocket, chunks, onWrite, clientWritesPerTick);
     }
 
-    function onWrite(byteLength) {
-      bytesSentCount += byteLength;
+    function onWrite(bytesSent, chunkIdx) {
+      if (bytesSent == 0) throw new Error('onWrite bytesSent = 0');
+      if (chunkIdx >=  chunks.length) throw new Error('onWrite chunkIdx out-of-range');
+
+      bytesSentCount += bytesSent;
       if(bytesSentCount >= bytesShouldSendTotal) {
-        console.log('done writing, took millis:',
-          now() - clientWriteStartTime);
+        if (bytesSentCount > bytesShouldSendTotal) {
+          throw new Error(`bytesSentCount ${bytesSentCount} > bytesShouldSendTotal ${bytesShouldSendTotal}`);
+        }
+
+        log('Done writing', bytesSentCount,
+          'took millis:', now() - clientWriteStartTime,
+          bytesSent, chunkIdx);
+
         clientWriteDoneTime = now();
       }
     }
   }
 
   function onClientConnected(connection) {
-    console.log('Got new connection:', connection.fd)
+    log('Got new connection:', connection.fd)
 
     let bytesRead = 0;
     let firstByteReadTime;
@@ -135,23 +146,23 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
         if (!firstByteReadTime) {
           firstByteReadTime = now();
         }
-        //console.log('Read buffer of size:', readBuf.byteLength)
+        //log('Read buffer of size:', readBuf.byteLength)
         bytesRead += readBuf.byteLength;
       }, (errRes) => {
-        console.log('Error reading, got result:', errRes);
+        log('Error reading, got result:', errRes);
       });
 
       const readDoneTime = now();
       const readTimeDiffMs = readDoneTime - serverConnectionAcceptTime;
-      const readBandwidthEstimKbps = (8 * (bytesShouldSendTotal / readTimeDiffMs))
-      console.log('Done reading stream, took millis:', readTimeDiffMs, 'for kbytes:~',
-      (bytesSentCount / 1000), 'of', (bytesShouldSendTotal / 1000));
-      console.log('Estimated read-bandwidth (kb/s):', readBandwidthEstimKbps.toFixed(3))
-      console.log('First-byte-write-to-read latency millis:',
-        firstByteReadTime - clientWriteStartTime)
-      console.log('End-to-end transfer latency millis:', readDoneTime - clientWriteStartTime)
-      console.log('Client-side writing took millis:',
-        clientWriteDoneTime - clientWriteStartTime);
+      const readBandwidthEstimKbps = (8 * (bytesShouldSendTotal / readTimeDiffMs));
+
+      log('Done reading stream, took millis:', readTimeDiffMs,
+        'for kbytes:~', (bytesSentCount / 1000), 'of', (bytesShouldSendTotal / 1000));
+
+      log('Estimated read-bandwidth (kb/s):', readBandwidthEstimKbps.toFixed(3))
+      log('First-byte-write-to-read latency millis:', firstByteReadTime - clientWriteStartTime)
+      log('End-to-end transfer latency millis:', readDoneTime - clientWriteStartTime)
+      log('Client-side writing took millis:', clientWriteDoneTime - clientWriteStartTime);
 
       expect(bytesSentCount).toEqual(bytesShouldSendTotal);
 
@@ -160,12 +171,11 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
       expect(receivedBuffer.byteLength).toEqual(bytesSentCount);
 
       /*
-
       for (let i = 0; i < receivedBuffer.byteLength; i++) {
         expect(sourceDataBuf.readInt8(i)).toEqual(receivedBuffer.readInt8(i));
       }
-
       */
+
       done();
     }
 
