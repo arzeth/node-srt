@@ -4,7 +4,7 @@ const {
   writeChunksWithExplicitScheduling
 } = require('../src/async-write-modes');
 
-const {sliceBufferToChunks, copyChunksIntoBuffer} = require('../src/tools')
+const {sliceBufferToChunks, copyChunksIntoBuffer} = require('../src/tools');
 
 const fs = require("fs");
 const path = require("path");
@@ -16,7 +16,9 @@ const testFiles = [
   "data/SpringBlenderOpenMovie.mp4.ts"
 ]
 
-jest && jest.setTimeout(3000)
+jest && jest.setTimeout(3000);
+
+//new SRT().setLogLevel(7);
 
 describe("AsyncSRT to SRTServer one-way transmission", () => {
   it("should transmit data written (yielding-loop)", async done => {
@@ -24,7 +26,7 @@ describe("AsyncSRT to SRTServer one-way transmission", () => {
   });
 
   it("should transmit data written (explicit-scheduling)", async done => {
-    transmitClientToServerLoopback(9001, done, true);
+    transmitClientToServerLoopback(8000, done, true);
   });
 });
 
@@ -90,7 +92,7 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
       throw new Error('client connect failed');
     }
 
-    log('Connect result:', result)
+    log('Client-connect() result:', result)
 
     clientWriteStartTime = now();
 
@@ -124,8 +126,8 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
   function onClientConnected(connection) {
     log('Got new connection:', connection.fd)
 
-    let bytesRead = 0;
-    let firstByteReadTime;
+    let bytesRecv = 0;
+    let firstByteRxTime;
 
     const serverConnectionAcceptTime = now();
 
@@ -143,11 +145,11 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
         bytesShouldSendTotal,
         readBufSize,
         (readBuf) => {
-        if (!firstByteReadTime) {
-          firstByteReadTime = now();
+        if (!firstByteRxTime) {
+          firstByteRxTime = now();
         }
-        //log('Read buffer of size:', readBuf.byteLength)
-        bytesRead += readBuf.byteLength;
+        bytesRecv += readBuf.byteLength;
+        // log('Read buffer of size:', readBuf.byteLength, bytesRecv, '/', bytesSentCount, '/', bytesShouldSendTotal, bytesSentCount - bytesRecv)
       }, (errRes) => {
         log('Error reading, got result:', errRes);
       });
@@ -160,7 +162,7 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
         'for kbytes:~', (bytesSentCount / 1000), 'of', (bytesShouldSendTotal / 1000));
 
       log('Estimated read-bandwidth (kb/s):', readBandwidthEstimKbps.toFixed(3))
-      log('First-byte-write-to-read latency millis:', firstByteReadTime - clientWriteStartTime)
+      log('First-byte-write-to-read latency millis:', firstByteRxTime - clientWriteStartTime)
       log('End-to-end transfer latency millis:', readDoneTime - clientWriteStartTime)
       log('Client-side writing took millis:', clientWriteDoneTime - clientWriteStartTime);
 
