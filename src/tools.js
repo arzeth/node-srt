@@ -14,6 +14,7 @@ function sliceBufferToChunks(srcData, chunkMaxSize,
   for (let offset = initialOffset; relativeOffset < byteLength; offset += chunkMaxSize) {
     relativeOffset = offset - initialOffset;
     const size = Math.min(chunkMaxSize, byteLength - relativeOffset);
+    if (size === 0) break; // relativeOffset === byteLength
     const chunkBuf
           = Uint8Array.prototype
               .slice.call(srcData, offset, offset + size);
