@@ -107,8 +107,11 @@ async function writeChunksWithYieldingLoop(asyncSrt, socketFd, chunks,
       }
 
       const chunkBuf = chunks[chunkIndex++];
+
       const whenWritten = asyncSrt.write(socketFd, chunkBuf);
+
       writeResultPromises.push(whenWritten);
+
       whenWritten.then((writeRes) => {
         if (writeRes === SRT.ERROR) {
           throw new Error('AsyncSRT.write() failed');
@@ -170,6 +173,7 @@ function writeChunksWithExplicitScheduling(asyncSrt, socketFd, chunks,
 
   // schedule tick-interval
   const writeTimer = setInterval(tick, intervalMs);
+
   // run once directly in current stack
   tick();
 
