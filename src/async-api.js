@@ -9,11 +9,6 @@ const { SRT } = require('./srt');
 const DEFAULT_PROMISE_TIMEOUT_MS = 3000;
 
 const DEBUG = false;
-
-/*
-const WORK_ID_GEN_MOD = 0xFFF;
-*/
-
 class AsyncSRT {
 
   /**
@@ -32,11 +27,43 @@ class AsyncSRT {
 
     this._worker = workerFactory();
     this._worker.on('message', this._onWorkerMessage.bind(this));
-    /*
-    this._workIdGen = 0;
-    this._workCbMap = new Map();
-    */
+
     this._workCbQueue = [];
+
+    this._error = null;
+  }
+
+  /**
+   * Retrieve the Error for any failure result.
+   *
+   * Generally, to handle errors, the resulting return value needs to be checked,
+   * in most cases for being SRT_ERROR. Not by using any type of exception-catch.
+   *
+   * Meaning, also the promise will not get rejected for "normal" SRT failures,
+   * i.e try-catch-await will not throw on these methods (only if there is
+   * an unexpected error, but usually the async-API methods here don't need
+   * to expect errors thrown in normal ops and typical error handling).
+   *
+   * For example, typically the return value of the API call will be SRT_ERROR (-1).
+   * But we will not throw the exception on the API call (since the call returns
+   * with this error value).
+   *
+   * Instead, the error gets retrieved into this storage for each
+   * AsyncSRT instance, and can get retrieved on the user-side for any call
+   * that returned an error code. Very much like SRT does internally and
+   * on the native API.
+   *
+   * @returns {Error}
+   */
+  getError() {
+    return this._error;
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isDisposed() {
+    return !this._worker;
   }
 
   /**
@@ -47,11 +74,12 @@ class AsyncSRT {
     const worker = this._worker;
     this._worker = null;
     if (this._workCbQueue.length !== 0) {
-      console.warn(`AsyncSRT: flushing callback-queue with ${this._workCbQueue.length} remaining jobs awaiting.`);
+      DEBUG && console.warn(`AsyncSRT: flushing callback-queue with ${this._workCbQueue.length} remaining jobs awaiting.`);
       this._workCbQueue.length = 0;
     }
     return worker.terminate();
   }
+
 
   /**
    * @private
@@ -61,17 +89,17 @@ class AsyncSRT {
     // not sure if there can still be message event
     // after calling terminate
     // but let's guard from that state anyway.
-    if (this._worker === null) return;
+    if (this.isDisposed()) return;
 
-    const resolveTime = performance.now();
+    // const resolveTime = performance.now();
     const callback = this._workCbQueue.shift();
 
     if (data.err) {
-      console.error('AsyncSRT: Error from task-runner:', data.err.message,
+      DEBUG && console.error('AsyncSRT: Error from task-runner:', data.err.message,
         '\n  Binding call:', traceCallToString(data.call.method, data.call.args),
         //'\n  Stacktrace:', data.err.stack
         );
-      return;
+      this._error = data.err;
     }
 
     const {timestamp, result, workId} = data;
@@ -85,20 +113,12 @@ class AsyncSRT {
    * @param {Function} callback
    */
   _postAsyncWork(method, args, callback) {
-    const timestamp = performance.now();
+    // we check here again because this gets called from
+    // a promise-executor (potentially in different tick than promise-creation).
+    if (this.isDisposed())
+      return Promise.reject(new Error("AsyncSRT._postAsyncWork: has already been dispose()'d"));
 
-    // not really needed atm,
-    // only if the worker spawns async jobs itself internally
-    // and thus the queuing order of jobs would not be preserved
-    // across here and the worker side.
-    /*
-    if (this._workCbMap.size >= WORK_ID_GEN_MOD - 1) {
-      throw new Error('Can`t post more async work: Too many awaited callbacks unanswered in queue');
-    }
-    const workId = this._workIdGen;
-    this._workIdGen = (this._workIdGen + 1) % WORK_ID_GEN_MOD;
-    this._workCbMap.set(workId, callback);
-    */
+    const timestamp = performance.now();
 
     DEBUG && debug('Sending call:', traceCallToString(method, args));
 
@@ -115,12 +135,19 @@ class AsyncSRT {
    * @param {Function} callback optional
    * @param {boolean} useTimeout
    * @param {number} timeoutMs
+   * @returns {Promise}
    */
   _createAsyncWorkPromise(method,
     args = [],
     callback = null,
     useTimeout = false,
     timeoutMs = AsyncSRT.TimeoutMs) {
+
+    if (this.isDisposed()) {
+      const err = new Error("AsyncSRT_createAsyncWorkPromise: has already been dispose()'d");
+      console.error(err);
+      return Promise.reject(err);
+    }
 
     return new Promise((resolve, reject) => {
       let timeout;
@@ -215,22 +242,21 @@ class AsyncSRT {
    * Pass a packet buffer to write to the socket.
    *
    * The size of the buffer must not exceed the SRT payload MTU
-   * (usually 1316 bytes).
+   * (usually 1316 bytes).(Otherwise the call will resolve to SRT_ERROR.)
    *
-   * Otherwise the call will resolve to SRT_ERROR.
+   * When consuming from a larger piece of data,
+   * chunks written will therefore need to be slice copies of the source buffer
    *
-   * A system-specific socket-message error message may show in logs as enabled
-   * where the error is thrown (on the binding call to the native SRT API),
-   * and in the async API internals as it gets propagated back from the task-runner).
+   * A (somewhat OS-specific) message/socket-error may show in logs as enabled
+   * where the error is thrown: on the binding call to the native SRT APIs,
+   * and in the async API internals as it gets propagated back from the task-runner.
    *
    * Note that any underlying data buffer passed in
    * will be *neutered* by our worker thread and
    * therefore become unusable (i.e go to detached state, `byteLengh === 0`)
    * for the calling thread of this method.
-   * When consuming from a larger piece of data,
-   * chunks written will need to be slice copies of the source buffer.
    *
-   * For a usage example, see integration-tests setup.
+   * For a usage example, see client/server examples in tests.
    *
    * @param {number} socket Socket identifier to write to
    * @param {Buffer | Uint8Array} chunk The underlying `buffer` (ArrayBufferLike) will get "neutered" by creating the async task. Pass in or use a copy respectively if concurrent data usage is intended.
