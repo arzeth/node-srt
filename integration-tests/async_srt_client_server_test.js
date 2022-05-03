@@ -5,7 +5,7 @@ const {
   writeChunksWithExplicitScheduling
 } = require('../src/async-write-modes');
 
-const {sliceBufferToChunks, copyChunksIntoBuffer, generateRandomBytes} = require('../src/tools');
+const {sliceBufferToChunks, copyChunksIntoBuffer, generateRandomBytes, cloneChunks} = require('../src/tools');
 
 const { performance } = require("perf_hooks");
 
@@ -36,14 +36,14 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
   const chunkMaxSize = 1024;
   const numChunks = 8 * 1024;
 
-  const txDataBuf = generateRandomBytes(numChunks * chunkMaxSize);
+  const txSourceData = generateRandomBytes(numChunks * chunkMaxSize);
 
-  const bytesShouldSendTotal = Math.min(numChunks * chunkMaxSize, txDataBuf.byteLength);
+  const bytesShouldSendTotal = Math.min(numChunks * chunkMaxSize, txSourceData.byteLength);
 
   const clientWritesPerTick = 32; // increasing this beyond certain levels leading to > 100Mbit/s thruput has libSRT drop packets internally
 
   const packetDataSlicingStartTime = now();
-  const txChunks = sliceBufferToChunks(txDataBuf, chunkMaxSize, bytesShouldSendTotal);
+  const txChunks = sliceBufferToChunks(txSourceData, chunkMaxSize, bytesShouldSendTotal);
   const packetDataSlicingTimeD = now() - packetDataSlicingStartTime;
 
   log('Pre-slicing packet data took millis:', packetDataSlicingTimeD);
@@ -88,10 +88,10 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
 
     if (useExplicitScheduling) {
       writeChunksWithExplicitScheduling(asyncSrtClient,
-        clientSideSocket, txChunks, onWrite, clientWritesPerTick);
+        clientSideSocket, cloneChunks(txChunks), onWrite, clientWritesPerTick);
     } else {
       writeChunksWithYieldingLoop(asyncSrtClient,
-        clientSideSocket, txChunks, onWrite, clientWritesPerTick);
+        clientSideSocket, cloneChunks(txChunks), onWrite, clientWritesPerTick);
     }
 
     function onWrite(bytesSent, chunkIdx) {
@@ -158,19 +158,16 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
 
       expect(bytesSentCount).toEqual(bytesShouldSendTotal);
 
-      const receivedBuffer = copyChunksIntoBuffer(rxChunks);
+      const rxDestData = copyChunksIntoBuffer(rxChunks);
 
-      expect(receivedBuffer.byteLength).toEqual(txDataBuf.byteLength);
-      expect(receivedBuffer.byteLength).toEqual(bytesSentCount);
+      expect(rxDestData.byteLength).toEqual(txSourceData.byteLength);
+      expect(rxDestData.byteLength).toEqual(bytesSentCount);
 
       expect(rxChunks.length).toEqual(txChunks.length);
 
-      /*
       for (let i = 0; i < rxChunks.length; i++) {
-        console.log(txDataBuf[i], receivedBuffer[i]);
+        expect(txChunks[i]).toEqual(rxChunks[i]);
       }
-      */
-
 
       //asyncSrtClient.dispose();
 
