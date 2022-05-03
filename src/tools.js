@@ -33,6 +33,14 @@ function getChunksTotalByteLength(chunks) {
 }
 
 /**
+ * @param {Array<Uint8Array>} chunks Input chunks
+ * @returns {Array<Uint8Array>} cloned data buffers
+ */
+ function cloneChunks(chunks) {
+  return chunks.map(buf => new Uint8Array(buf));
+}
+
+/**
  *
  * @param {Array<Uint8Array>} chunks Input chunks
  * @param {Buffer} targetBuffer Optional, must have sufficient size
@@ -69,6 +77,7 @@ function generateRandomBytes(length) {
 
 module.exports = {
   getChunksTotalByteLength,
+  cloneChunks,
   copyChunksIntoBuffer,
   sliceBufferToChunks,
   generateRandomBytes
