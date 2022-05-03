@@ -54,8 +54,22 @@ function copyChunksIntoBuffer(chunks, targetBuffer = null) {
   return targetBuffer;
 }
 
+/**
+ *
+ * @param {number} length
+ * @returns {Uint8Array}
+ */
+function generateRandomBytes(length) {
+  const buf = new Uint8Array(length);
+  for (let i = 0; i < buf.byteLength; i++) {
+    buf[i] = Math.round(0xFF * Math.random());
+  }
+  return buf;
+}
+
 module.exports = {
   getChunksTotalByteLength,
   copyChunksIntoBuffer,
-  sliceBufferToChunks
+  sliceBufferToChunks,
+  generateRandomBytes
 }
