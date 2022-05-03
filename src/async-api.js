@@ -40,7 +40,8 @@ class AsyncSRT {
   }
 
   /**
-   * @returns {Promise<number>} Resolves to exit code of Worker
+   * @returns {Promise<number>} Resolves to exit code of Worker (only NodeJS)
+   * @see https://nodejs.org/docs/latest-v14.x/api/worker_threads.html#worker_threads_worker_terminate
    */
   dispose() {
     const worker = this._worker;
