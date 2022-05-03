@@ -1,24 +1,19 @@
 const { SRT, AsyncSRT, SRTServer } = require('../index');
+
 const {
   writeChunksWithYieldingLoop,
   writeChunksWithExplicitScheduling
 } = require('../src/async-write-modes');
 
-const {sliceBufferToChunks, copyChunksIntoBuffer} = require('../src/tools');
+const {sliceBufferToChunks, copyChunksIntoBuffer, generateRandomBytes} = require('../src/tools');
 
-const fs = require("fs");
-const path = require("path");
-const {performance} = require("perf_hooks");
+const { performance } = require("perf_hooks");
 
 const now = performance.now;
 
-const testFiles = [
-  "data/SpringBlenderOpenMovie.mp4.ts"
-]
-
 jest && jest.setTimeout(3000);
 
-//new SRT().setLogLevel(7);
+// new SRT().setLogLevel(7);
 
 describe("AsyncSRT to SRTServer one-way transmission", () => {
   it("should transmit data written (yielding-loop)", async done => {
@@ -34,26 +29,21 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
 
   const log = console.log.bind(console, `localServerPort: ${localServerPort} > `);
 
-  const fileReadStartTime = now();
-
-  const sourceDataBuf = fs.readFileSync(path.resolve(__dirname, testFiles[0]))
-  const fileReadTimeDiffMs = now() - fileReadStartTime;
-
   const localServerBindIface = '127.0.0.1';
+
+  const readerBufSize = 1024 * 1024;
+
   const chunkMaxSize = 1024;
   const numChunks = 8 * 1024;
 
-  const readBufSize = 1024 * 1024;
+  const txDataBuf = generateRandomBytes(numChunks * chunkMaxSize);
 
-  const bytesShouldSendTotal
-    = Math.min(numChunks * chunkMaxSize, sourceDataBuf.byteLength);
+  const bytesShouldSendTotal = Math.min(numChunks * chunkMaxSize, txDataBuf.byteLength);
 
   const clientWritesPerTick = 16; // increasing this beyond certain levels leading to > 100Mbit/s thruput has libSRT drop packets internally
 
-  log(`Read ${sourceDataBuf.byteLength} bytes from file into buffer in ${fileReadTimeDiffMs.toFixed(3)} ms`);
-
   const packetDataSlicingStartTime = now();
-  const chunks = sliceBufferToChunks(sourceDataBuf, chunkMaxSize, bytesShouldSendTotal);
+  const txChunks = sliceBufferToChunks(txDataBuf, chunkMaxSize, bytesShouldSendTotal);
   const packetDataSlicingTimeD = now() - packetDataSlicingStartTime;
 
   log('Pre-slicing packet data took millis:', packetDataSlicingTimeD);
@@ -98,15 +88,15 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
 
     if (useExplicitScheduling) {
       writeChunksWithExplicitScheduling(asyncSrtClient,
-        clientSideSocket, chunks, onWrite, clientWritesPerTick);
+        clientSideSocket, txChunks, onWrite, clientWritesPerTick);
     } else {
       writeChunksWithYieldingLoop(asyncSrtClient,
-        clientSideSocket, chunks, onWrite, clientWritesPerTick);
+        clientSideSocket, txChunks, onWrite, clientWritesPerTick);
     }
 
     function onWrite(bytesSent, chunkIdx) {
       if (bytesSent == 0) throw new Error('onWrite bytesSent = 0');
-      if (chunkIdx >=  chunks.length) throw new Error('onWrite chunkIdx out-of-range');
+      if (chunkIdx >=  txChunks.length) throw new Error('onWrite chunkIdx out-of-range');
 
       bytesSentCount += bytesSent;
       if(bytesSentCount >= bytesShouldSendTotal) {
@@ -141,9 +131,9 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
 
     async function onClientData() {
 
-      const chunks = await reader.readChunks(
+      const rxChunks = await reader.readChunks(
         bytesShouldSendTotal,
-        readBufSize,
+        readerBufSize,
         (readBuf) => {
         if (!firstByteRxTime) {
           firstByteRxTime = now();
@@ -168,15 +158,21 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
 
       expect(bytesSentCount).toEqual(bytesShouldSendTotal);
 
-      const receivedBuffer = copyChunksIntoBuffer(chunks);
+      const receivedBuffer = copyChunksIntoBuffer(rxChunks);
 
+      expect(receivedBuffer.byteLength).toEqual(txDataBuf.byteLength);
       expect(receivedBuffer.byteLength).toEqual(bytesSentCount);
 
+      expect(rxChunks.length).toEqual(txChunks.length);
+
       /*
-      for (let i = 0; i < receivedBuffer.byteLength; i++) {
-        expect(sourceDataBuf.readInt8(i)).toEqual(receivedBuffer.readInt8(i));
+      for (let i = 0; i < rxChunks.length; i++) {
+        console.log(txDataBuf[i], receivedBuffer[i]);
       }
       */
+
+
+      //asyncSrtClient.dispose();
 
       done();
     }
