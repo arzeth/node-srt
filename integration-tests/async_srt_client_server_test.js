@@ -40,7 +40,7 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
 
   const bytesShouldSendTotal = Math.min(numChunks * chunkMaxSize, txDataBuf.byteLength);
 
-  const clientWritesPerTick = 16; // increasing this beyond certain levels leading to > 100Mbit/s thruput has libSRT drop packets internally
+  const clientWritesPerTick = 32; // increasing this beyond certain levels leading to > 100Mbit/s thruput has libSRT drop packets internally
 
   const packetDataSlicingStartTime = now();
   const txChunks = sliceBufferToChunks(txDataBuf, chunkMaxSize, bytesShouldSendTotal);
