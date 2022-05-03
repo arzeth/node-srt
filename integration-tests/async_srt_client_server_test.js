@@ -169,7 +169,7 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
         expect(txChunks[i]).toEqual(rxChunks[i]);
       }
 
-      asyncSrtClient.dispose();
+      //asyncSrtClient.dispose();
       //asyncSrtServer.dispose();
 
       done();
