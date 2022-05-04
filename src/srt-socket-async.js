@@ -8,6 +8,8 @@ const { AsyncSRT } = require('./async-api');
  * An abstraction of SRT socket ownership concerns.
  * To be used as a base class for either client/server-side implementations.
  *
+ * Usage/Lifecycle: constructor -> create -> setSocketFlags (opt) -> open ->
+ *
  * @emits created
  * @emits disposed
  */
