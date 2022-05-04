@@ -1,6 +1,12 @@
 {
   "compilerOptions": {
-    "allowJs": true
+    "allowJs": true,
+    "outDir": "tsc-lib",
+    "typeRoots": ["./node_modules/@types"]
   },
-  "include": ["src", "types", "examples"]
+  "include": ["src", "types"],
+  "files": [
+    "./index-enums",
+    "./examples/srt.ts"
+  ]
 }

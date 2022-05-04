@@ -4,7 +4,7 @@
   "description": "NodeJS native add-on SDK for Secure Reliable Transport (libSRT)",
   "main": "index.js",
   "scripts": {
-    "check-tsc": "tsc examples/srt.ts --outDir ./tsc-lib",
+    "check-tsc": "tsc --build",
     "build": "npm run build-lib && npm run build-gyp",
     "build-gyp": "npm run gyp-clean && npm run gyp-rebuild",
     "build-lib": "node scripts/build-deps-srt.js",
