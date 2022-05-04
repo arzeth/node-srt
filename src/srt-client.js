@@ -75,7 +75,7 @@ class SRTClientConnection extends SRTSocketAsync {
    * @return {Promise<SRTServer>}
    */
   async _open() {
-    let result = await this._asyncSrt.connect(this.socket);
+    let result = await this._asyncSrt.connect(this.socket, this.address, this.port);
     if (result === SRT.ERROR) {
       throw new Error('SRT.connect() failed');
     }
