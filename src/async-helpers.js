@@ -5,7 +5,7 @@ function argsToString(args) {
 }
 
 function isBufferOrTypedArray(elem) {
-  return elem.buffer
+  return elem && elem.buffer
     && elem.buffer instanceof ArrayBuffer;
 }
 
