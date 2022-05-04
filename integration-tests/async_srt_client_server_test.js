@@ -23,6 +23,7 @@ describe("AsyncSRT to SRTServer one-way transmission", () => {
   it("should transmit data written (explicit-scheduling)", async done => {
     transmitClientToServerLoopback(8000, done, true);
   });
+
 });
 
 async function transmitClientToServerLoopback(localServerPort, done, useExplicitScheduling) {
@@ -38,12 +39,12 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
 
   const txSourceData = generateRandomBytes(numChunks * chunkMaxSize);
 
-  const bytesShouldSendTotal = Math.min(numChunks * chunkMaxSize, txSourceData.byteLength);
+  const txShouldSendBytes = Math.min(numChunks * chunkMaxSize, txSourceData.byteLength);
 
   const clientWritesPerTick = 32; // increasing this beyond certain levels leading to > 100Mbit/s thruput has libSRT drop packets internally
 
   const packetDataSlicingStartTime = now();
-  const txChunks = sliceBufferToChunks(txSourceData, chunkMaxSize, bytesShouldSendTotal);
+  const txChunks = sliceBufferToChunks(txSourceData, chunkMaxSize, txShouldSendBytes);
   const packetDataSlicingTimeD = now() - packetDataSlicingStartTime;
 
   log('Pre-slicing packet data took millis:', packetDataSlicingTimeD);
@@ -71,7 +72,7 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
 
   let clientWriteStartTime;
   let clientWriteDoneTime;
-  let bytesSentCount = 0;
+  let clientTxBytes = 0;
 
   async function clientWriteToConnection() {
 
@@ -98,13 +99,13 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
       if (bytesSent == 0) throw new Error('onWrite bytesSent = 0');
       if (chunkIdx >=  txChunks.length) throw new Error('onWrite chunkIdx out-of-range');
 
-      bytesSentCount += bytesSent;
-      if(bytesSentCount >= bytesShouldSendTotal) {
-        if (bytesSentCount > bytesShouldSendTotal) {
-          throw new Error(`bytesSentCount ${bytesSentCount} > bytesShouldSendTotal ${bytesShouldSendTotal}`);
+      clientTxBytes += bytesSent;
+      if(clientTxBytes >= txShouldSendBytes) {
+        if (clientTxBytes > txShouldSendBytes) {
+          throw new Error(`bytesSentCount ${clientTxBytes} > bytesShouldSendTotal ${txShouldSendBytes}`);
         }
 
-        log('Done writing', bytesSentCount,
+        log('Done writing', clientTxBytes,
           'took millis:', now() - clientWriteStartTime,
           bytesSent, chunkIdx);
 
@@ -116,8 +117,8 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
   function onClientConnected(connection) {
     log('Got new connection:', connection.fd)
 
-    let bytesRecv = 0;
-    let firstByteRxTime;
+    let rxBytes = 0;
+    let firstRxTime;
 
     const serverConnectionAcceptTime = now();
 
@@ -132,13 +133,13 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
     async function onClientData() {
 
       const rxChunks = await reader.readChunks(
-        bytesShouldSendTotal,
+        txShouldSendBytes,
         readerBufSize,
         (readBuf) => {
-        if (!firstByteRxTime) {
-          firstByteRxTime = now();
+        if (!firstRxTime) {
+          firstRxTime = now();
         }
-        bytesRecv += readBuf.byteLength;
+        rxBytes += readBuf.byteLength;
         // log('Read buffer of size:', readBuf.byteLength, bytesRecv, '/', bytesSentCount, '/', bytesShouldSendTotal, bytesSentCount - bytesRecv)
       }, (errRes) => {
         log('Error reading, got result:', errRes);
@@ -146,22 +147,22 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
 
       const readDoneTime = now();
       const readTimeDiffMs = readDoneTime - serverConnectionAcceptTime;
-      const readBandwidthEstimKbps = (8 * (bytesShouldSendTotal / readTimeDiffMs));
+      const readBandwidthEstimKbps = (8 * (txShouldSendBytes / readTimeDiffMs));
 
       log('Done reading stream, took millis:', readTimeDiffMs,
-        'for kbytes:~', (bytesSentCount / 1000), 'of', (bytesShouldSendTotal / 1000));
+        'for kbytes:~', (clientTxBytes / 1000), 'of', (txShouldSendBytes / 1000));
 
       log('Estimated read-bandwidth (kb/s):', readBandwidthEstimKbps.toFixed(3))
-      log('First-byte-write-to-read latency millis:', firstByteRxTime - clientWriteStartTime)
+      log('First-byte-write-to-read latency millis:', firstRxTime - clientWriteStartTime)
       log('End-to-end transfer latency millis:', readDoneTime - clientWriteStartTime)
       log('Client-side writing took millis:', clientWriteDoneTime - clientWriteStartTime);
 
-      expect(bytesSentCount).toEqual(bytesShouldSendTotal);
+      expect(clientTxBytes).toEqual(txShouldSendBytes);
 
       const rxDestData = copyChunksIntoBuffer(rxChunks);
 
       expect(rxDestData.byteLength).toEqual(txSourceData.byteLength);
-      expect(rxDestData.byteLength).toEqual(bytesSentCount);
+      expect(rxDestData.byteLength).toEqual(clientTxBytes);
 
       expect(rxChunks.length).toEqual(txChunks.length);
 
