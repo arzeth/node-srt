@@ -30,6 +30,11 @@ jobs:
         npm run test-jest -- --forceExit
       env:
         CI: true
+    - name: npm run check-tsc
+      run: |
+        npm run check-tsc
+      env:
+        CI: true
 
 #  build-windows:
 #    runs-on: windows-latest
