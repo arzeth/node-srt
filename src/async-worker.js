@@ -39,12 +39,6 @@ function run() {
       throw new Error('Worker message needs `method` property');
     }
 
-    /*
-    if (!data.workId) {
-      throw new Error('Worker message needs `workId` property');
-    }
-    */
-
     if (data.args.some((arg) => arg === undefined)) {
       const err = new Error(
         `Ignoring call: Can't have any arguments be undefined: ${argsToString(data.args)}`);
