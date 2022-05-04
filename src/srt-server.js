@@ -1,9 +1,11 @@
+
+const debug = require('debug')('srt-server');
+const EventEmitter = require("events");
+
+const { SRT } = require('./srt');
 const { AsyncSRT } = require('./async-api');
 const { AsyncReaderWriter } = require('./async-reader-writer');
-const { SRT } = require('./srt');
-
-const EventEmitter = require("events");
-const debug = require('debug')('srt-server');
+const { SRTSocketAsync } = require('./srt-socket-async');
 
 const DEBUG = false;
 
@@ -11,17 +13,18 @@ const EPOLL_PERIOD_MS_DEFAULT = 0;
 
 const EPOLLUWAIT_TIMEOUT_MS = 0;
 
-const SOCKET_LISTEN_BACKLOG = 128;
+const SOCKET_LISTEN_BACKLOG_SIZE = 0xFFFF;
 
 /**
  * @emits data
  * @emits closing
  * @emits closed
  */
-class SRTConnection extends EventEmitter {
+ class SRTServerConnection extends EventEmitter {
   /**
    *
    * @param {AsyncSRT} asyncSrt
+   *
    * @param {number} fd
    */
   constructor(asyncSrt, fd) {
@@ -48,6 +51,8 @@ class SRTConnection extends EventEmitter {
   }
 
   /**
+   * Use AsyncReaderWriter as the recommended way
+   * for performing r/w ops on connections.
    * @returns {AsyncReaderWriter}
    */
   getReaderWriter() {
@@ -55,7 +60,8 @@ class SRTConnection extends EventEmitter {
   }
 
   /**
-   *
+   * Lower-level access to async-handle read method of the client-owned socket.
+   * For performing massive read-ops without worrying, rather see `getReaderWriter`.
    * @param {number} bytes
    * @returns {Promise<Buffer | SRTResult.SRT_ERROR | null>}
    */
@@ -90,6 +96,23 @@ class SRTConnection extends EventEmitter {
   }
 
   /**
+   * `close` method can only get called once with any effect.
+   * It will cause the internal async handle ref to be null-set.
+   * This will immediatly have `isClosed()` eval to `true`,
+   * causing subsequent calls to this method to be no-op, and result to null.
+   *
+   * The fd-closing op being async, it emits "closing" before
+   * and "closed" after any success (or not).
+   *
+   * Any errors in the async task can be caught using promise-catch.
+   *
+   * The closing operation having finally succeeded can be checked
+   * upon the valid of the `fd` prop (will be null after succeeded close).
+   * In case any initial failure needs to be retried, we can do this
+   * manually with this fd-getter, and any async handles close method.
+   *
+   * This method detaches all event-emitter listeners.
+   *
    * @returns {Promise<SRTResult | null>}
    */
   async close() {
@@ -122,12 +145,12 @@ class SRTConnection extends EventEmitter {
  * @emits disconnection
  * @emits disposed
  */
-class SRTServer extends EventEmitter {
+class SRTServer extends SRTSocketAsync {
 
   /**
    *
-   * @param {number} port socket port number
-   * @param {string} address optional, default: '0.0.0.0'
+   * @param {number} port listening port number
+   * @param {string} address local interface, optional, default: '0.0.0.0'
    * @param {number} epollPeriodMs optional, default: EPOLL_PERIOD_MS_DEFAULT
    * @returns {Promise<SRTServer>}
    */
@@ -137,70 +160,77 @@ class SRTServer extends EventEmitter {
 
   /**
    *
-   * @param {number} port socket port number
-   * @param {string} address optional, default: '0.0.0.0'
+   * @param {number} port listening port number
+   * @param {string} address local interface, optional, default: '0.0.0.0'
    * @param {number} epollPeriodMs optional, default: EPOLL_PERIOD_MS_DEFAULT
    */
-  constructor(port, address = '0.0.0.0', epollPeriodMs = EPOLL_PERIOD_MS_DEFAULT) {
-    super();
+  constructor(port, address, epollPeriodMs = EPOLL_PERIOD_MS_DEFAULT) {
+    super(port, address);
 
-    if (!Number.isInteger(port) || port <= 0 || port > 65535)
-      throw new Error('Need a valid port number but got: ' + port);
-
-    this.port = port;
-    this.address = address;
     this.epollPeriodMs = epollPeriodMs;
-    this.socket = null;
-    this.epid = null;
+
+    this._epid = null;
 
     this._pollEventsTimer = null;
-    this._asyncSrt = new AsyncSRT();
+
     this._connectionMap = {};
-  }
 
-  async dispose() {
-    clearTimeout(this._pollEventsTimer);
-    await this._asyncSrt.close(this.socket);
-    this.socket = null;
-    const res = await this._asyncSrt.dispose();
-    this._asyncSrt = null;
-    this.emit('disposed');
-    return res;
-  }
-
-  /**
-   * Call this before `open`.
-   * Call `setSocketFlags` after this.
-   *
-   * @return {Promise<SRTServer>}
-   */
-  async create() {
-    this.socket = await this._asyncSrt.createSocket();
-    this.emit('created');
-    return this;
+    /**
+     * Needs to be set before calling `open` (any changes after it
+     * wont be considered i.e are effectless).
+     * @public
+     * @member {number}
+     */
+     this.backlogSize = SOCKET_LISTEN_BACKLOG_SIZE;
   }
 
   /**
-   * Call this after `create`.
-   * Call `setSocketFlags` before calling this.
+   * @returns {Promise<void>}
+   */
+   dispose() {
+    this._clearTimers();
+    return super.dispose();
+  }
+
+  create() {
+    return super.create();
+  }
+
+  open() {
+    return super.open();
+  }
+
+  getConnectionByHandle(fd) {
+    return this._connectionMap[fd] || null;
+  }
+
+  /**
+   * @returns {Array<SRTServerConnection>}
+   */
+  getAllConnections() {
+    return Array.from(Object.values(this._connectionMap));
+  }
+
+  /**
    *
    * @return {Promise<SRTServer>}
    */
-  async open() {
+   async _open() {
     let result;
-    result = await this._asyncSrt.bind(this.socket, this.address, this.port);
+    result = await this.asyncSrt.bind(this.socket, this.address, this.port);
     if (result === SRT.ERROR) {
       throw new Error('SRT.bind() failed');
     }
-    result = await this._asyncSrt.listen(this.socket, SOCKET_LISTEN_BACKLOG);
+    result = await this.asyncSrt.listen(this.socket, SOCKET_LISTEN_BACKLOG_SIZE);
     if (result === SRT.ERROR) {
-      throw new Error('SRT.listen() failed');
+      console.error(`SRT.listen() failed for address/port: ${this.address}/${this.port}`);
+      throw new Error(`SRT.listen() failed for address/port: ${this.address}/${this.port}`);
     }
-    result = await this._asyncSrt.epollCreate();
+    result = await this.asyncSrt.epollCreate();
     if (result === SRT.ERROR) {
       throw new Error('SRT.epollCreate() failed');
     }
-    this.epid = result;
+    this._epid = result;
 
     this.emit('opened');
 
@@ -208,7 +238,7 @@ class SRTServer extends EventEmitter {
     // since it is useless to poll events otherwise
     // and we should also yield from the stack at this point
     // since the `opened` event handlers above may do whatever
-    await this._asyncSrt.epollAddUsock(this.epid, this.socket, SRT.EPOLL_IN | SRT.EPOLL_ERR);
+    await this.asyncSrt.epollAddUsock(this._epid, this.socket, SRT.EPOLL_IN | SRT.EPOLL_ERR);
 
     this._pollEvents();
 
@@ -216,56 +246,23 @@ class SRTServer extends EventEmitter {
   }
 
   /**
-   *
-   * @param {SRTSockOpt[]} opts
-   * @param {SRTSockOptValue[]} values
-   * @returns {Promise<SRTResult[]>}
-   */
-  async setSocketFlags(opts, values) {
-    if (opts.length !== values.length)
-      throw new Error('opts and values must have same length');
-    const promises = [];
-    opts.forEach((opt, index) => {
-      const p = this._asyncSrt.setSockOpt(this.socket, opt, values[index]);
-      promises.push(p);
-    })
-    return Promise.all(promises);
-  }
-
-  /**
-   *
-   * @param {number} fd
-   * @returns {SRTConnection | null}
-   */
-  getConnectionByHandle(fd) {
-    return this._connectionMap[fd] || null;
-  }
-
-  /**
-   * @returns {Array<SRTConnection>}
-   */
-  getAllConnections() {
-    return Array.from(Object.values(this._connectionMap));
-  }
-
-  /**
    * @private
    * @param {SRTEpollEvent} event
    */
   async _handleEvent(event) {
-    const status = await this._asyncSrt.getSockState(event.socket);
+    const status = await this.asyncSrt.getSockState(event.socket);
 
     // our local listener socket
     if (event.socket === this.socket) {
 
       if (status === SRT.SRTS_LISTENING) {
-        const fd = await this._asyncSrt.accept(this.socket);
+        const fd = await this.asyncSrt.accept(this.socket);
         // no need to await the epoll subscribe result before continuing
-        this._asyncSrt.epollAddUsock(this.epid, fd, SRT.EPOLL_IN | SRT.EPOLL_ERR);
+        this.asyncSrt.epollAddUsock(this._epid, fd, SRT.EPOLL_IN | SRT.EPOLL_ERR);
         debug("Accepted client connection with file-descriptor:", fd);
         // create new client connection handle
         // and emit accept event
-        const connection = new SRTConnection(this._asyncSrt, fd);
+        const connection = new SRTServerConnection(this.asyncSrt, fd);
         connection.on('closing', () => {
           // remove handle
           delete this._connectionMap[fd];
@@ -302,7 +299,13 @@ class SRTServer extends EventEmitter {
    * @private
    */
   async _pollEvents() {
-    const events = await this._asyncSrt.epollUWait(this.epid, EPOLLUWAIT_TIMEOUT_MS);
+    // needed for async-disposal, guard from AsyncSRT instance wiped
+    if (!this.asyncSrt) {
+      this._clearTimers();
+      return;
+    }
+
+    const events = await this.asyncSrt.epollUWait(this._epid, EPOLLUWAIT_TIMEOUT_MS);
     events.forEach((event) => {
       this._handleEvent(event);
     });
@@ -311,12 +314,18 @@ class SRTServer extends EventEmitter {
     // when already timer scheduled
     // will be no-op if timer-id invalid or old
     clearTimeout(this._pollEventsTimer);
-    this._pollEventsTimer
-      = setTimeout(this._pollEvents.bind(this), this.epollPeriodMs)
+    this._pollEventsTimer = setTimeout(this._pollEvents.bind(this), this.epollPeriodMs);
+  }
+
+  _clearTimers() {
+    if (this._pollEventsTimer !== null) {
+      clearTimeout(this._pollEventsTimer);
+      this._pollEventsTimer = null;
+    }
   }
 }
 
 module.exports = {
-  SRTConnection,
+  SRTServerConnection,
   SRTServer
 };
