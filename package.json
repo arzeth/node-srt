@@ -12,7 +12,7 @@
     "gyp-clean": "node-gyp clean",
     "gyp-rebuild": "node-gyp rebuild",
     "gyp-rebuild-jn": "node-gyp rebuild -j $(echo \"console.log(require('os').cpus().length)\" | node)",
-    "install": "npm run build",
+    "install": "npm run clean && npm run build",
     "lint": "eslint . --ext .js --ext .ts",
     "postversion": "git push && git push --tags",
     "test": "jasmine",
