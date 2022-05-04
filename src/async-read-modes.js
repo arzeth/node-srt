@@ -39,4 +39,4 @@ async function readChunks(asyncSrt, socketFd, minBytesRead, readBufSize = READ_B
 module.exports = {
   READ_BUF_SIZE,
   readChunks
-}
+};

@@ -20,7 +20,7 @@ const SOCKET_LISTEN_BACKLOG_SIZE = 0xFFFF;
  * @emits closing
  * @emits closed
  */
- class SRTServerConnection extends EventEmitter {
+class SRTServerConnection extends EventEmitter {
   /**
    *
    * @param {AsyncSRT} asyncSrt
@@ -181,13 +181,13 @@ class SRTServer extends SRTSocketAsync {
      * @public
      * @member {number}
      */
-     this.backlogSize = SOCKET_LISTEN_BACKLOG_SIZE;
+    this.backlogSize = SOCKET_LISTEN_BACKLOG_SIZE;
   }
 
   /**
    * @returns {Promise<void>}
    */
-   dispose() {
+  dispose() {
     this._clearTimers();
     return super.dispose();
   }
@@ -215,7 +215,7 @@ class SRTServer extends SRTSocketAsync {
    *
    * @return {Promise<SRTServer>}
    */
-   async _open() {
+  async _open() {
     let result;
     result = await this.asyncSrt.bind(this.socket, this.address, this.port);
     if (result === SRT.ERROR) {

@@ -1,7 +1,7 @@
 
 import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockStatus } from "../src/srt-api-enums";
 
-import { SRTReadReturn, SRTFileDescriptor, SRTEpollEvent, SRTSockOptValue, SRTStats } from "./srt-api"
+import { SRTReadReturn, SRTFileDescriptor, SRTEpollEvent, SRTSockOptValue, SRTStats } from "./srt-api";
 
 export type AsyncSRTCallback<T> = (result: T) => void;
 
@@ -118,6 +118,6 @@ export class AsyncSRT {
    * @param socket
    * @param clear if true, accumulated stats are cleared after each call
    */
-   stats(socket: number, clear: boolean, callback?: AsyncSRTCallback<SRTStats>): Promise<SRTStats>
+  stats(socket: number, clear: boolean, callback?: AsyncSRTCallback<SRTStats>): Promise<SRTStats>
 
 }

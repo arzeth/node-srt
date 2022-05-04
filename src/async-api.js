@@ -98,7 +98,7 @@ class AsyncSRT {
       DEBUG && console.error('AsyncSRT: Error from task-runner:', data.err.message,
         '\n  Binding call:', traceCallToString(data.call.method, data.call.args),
         //'\n  Stacktrace:', data.err.stack
-        );
+      );
       this._error = data.err;
     }
 
@@ -263,7 +263,7 @@ class AsyncSRT {
    */
   write(socket, chunk, callback) {
     const byteLength = chunk.byteLength;
-    DEBUG && debug(`write ${byteLength} to socket:`, socket)
+    DEBUG && debug(`write ${byteLength} to socket:`, socket);
     return this._createAsyncWorkPromise("write", [socket, chunk], callback)
       .then((result) => {
         if (result !== SRT.ERROR) {
@@ -340,7 +340,7 @@ class AsyncSRT {
    * @param {boolean} clear
    * @returns {Promise<SRTStats>}
    */
-   stats(socket, clear, callback) {
+  stats(socket, clear, callback) {
     return this._createAsyncWorkPromise("stats", [socket, clear], callback);
   }
 }

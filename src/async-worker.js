@@ -16,7 +16,7 @@ if (isMainThread) {
 }
 
 try {
-  run()
+  run();
 } catch(err) {
   console.error('AsyncSRT task-runner internal exception:', err);
 }
@@ -31,7 +31,7 @@ function run() {
 
   parentPort.on('close', () => {
     DEBUG && debug('AsyncSRT: Closing task-runner');
-  })
+  });
 
   parentPort.on('message', (data) => {
 
@@ -61,7 +61,7 @@ function run() {
       } catch(err) {
         console.error(
           `Exception thrown by native binding call "${traceCallToString(data.method, data.args)}":`,
-            err);
+          err);
         parentPort.postMessage({err, call: data});
         return;
       }

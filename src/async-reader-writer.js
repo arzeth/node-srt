@@ -58,7 +58,7 @@ class AsyncReaderWriter {
     readBufSize = DEFAULT_READ_BUFFER,
     onRead = null,
     onError = null) {
-    return readChunks(this._asyncSrt, this._fd, minBytesRead, readBufSize, onRead, onError)
+    return readChunks(this._asyncSrt, this._fd, minBytesRead, readBufSize, onRead, onError);
   }
 }
 
@@ -67,4 +67,4 @@ module.exports = {
   DEFAULT_MTU_SIZE,
   DEFAULT_WRITES_PER_TICK,
   DEFAULT_READ_BUFFER
-}
+};

@@ -119,7 +119,7 @@ async function writeChunksWithYieldingLoop(asyncSrt, socketFd, chunks,
         if (onWrite) {
           onWrite(writeRes, chunkWrittenIdx);
         }
-        chunkWrittenIdx++
+        chunkWrittenIdx++;
       });
 
     }
@@ -195,7 +195,7 @@ function writeChunksWithExplicitScheduling(asyncSrt, socketFd, chunks,
           if (onWrite) {
             onWrite(writeRes, chunkWrittenIdx);
           }
-          chunkWrittenIdx++
+          chunkWrittenIdx++;
         });
     }
   }
@@ -205,4 +205,4 @@ function writeChunksWithExplicitScheduling(asyncSrt, socketFd, chunks,
 module.exports = {
   writeChunksWithYieldingLoop,
   writeChunksWithExplicitScheduling
-}
+};

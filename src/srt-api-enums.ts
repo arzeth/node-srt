@@ -69,7 +69,7 @@ export enum SRTEpollOpt
    SRT_EPOLL_OUT      = 0x4,
    SRT_EPOLL_ERR      = 0x8,
    SRT_EPOLL_ET       = 0x80000000 // (2147483648) C: 1u << 31
-};
+}
 
 export enum SRTSockStatus {
   SRTS_INIT = 1,

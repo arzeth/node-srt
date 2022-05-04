@@ -4,7 +4,7 @@ const { resolve } = require('path');
 const getAsyncWorkerPath = () => resolve(__dirname, './async-worker.js');
 
 let _createAsyncWorker = () => {
-  return new Worker(getAsyncWorkerPath())
+  return new Worker(getAsyncWorkerPath());
 };
 
 const createAsyncWorker = () => {

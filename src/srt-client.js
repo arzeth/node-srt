@@ -85,4 +85,4 @@ class SRTClientConnection extends SRTSocketAsync {
 
 module.exports = {
   SRTClientConnection
-}
+};

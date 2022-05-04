@@ -19,7 +19,7 @@ module.exports = {
   SRTWriteStream,
   setSRTLoggingLevel,
   isSRTInstalled() {
-    return !! SRT
+    return !! SRT;
   },
   createSRTAsyncWorker,
   getSRTAsyncWorkerPath,

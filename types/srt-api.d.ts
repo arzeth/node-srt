@@ -223,6 +223,6 @@ export class SRT {
    * @param clear if true, accumulated stats are cleared after each call
    * @returns Current SRT statistics
    */
-   stats(socket: number, clear: boolean): SRTStats;
+  stats(socket: number, clear: boolean): SRTStats;
 }
 

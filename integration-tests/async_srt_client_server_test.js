@@ -83,7 +83,7 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
       throw new Error('client connect failed');
     }
 
-    log('Client-connect() result:', result)
+    log('Client-connect() result:', result);
 
     clientWriteStartTime = now();
 
@@ -115,7 +115,7 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
   }
 
   function onClientConnected(connection) {
-    log('Got new connection:', connection.fd)
+    log('Got new connection:', connection.fd);
 
     let rxBytes = 0;
     let firstRxTime;
@@ -136,14 +136,14 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
         txShouldSendBytes,
         readerBufSize,
         (readBuf) => {
-        if (!firstRxTime) {
-          firstRxTime = now();
-        }
-        rxBytes += readBuf.byteLength;
+          if (!firstRxTime) {
+            firstRxTime = now();
+          }
+          rxBytes += readBuf.byteLength;
         // log('Read buffer of size:', readBuf.byteLength, bytesRecv, '/', bytesSentCount, '/', bytesShouldSendTotal, bytesSentCount - bytesRecv)
-      }, (errRes) => {
-        log('Error reading, got result:', errRes);
-      });
+        }, (errRes) => {
+          log('Error reading, got result:', errRes);
+        });
 
       const readDoneTime = now();
       const readTimeDiffMs = readDoneTime - serverConnectionAcceptTime;
@@ -152,9 +152,9 @@ async function transmitClientToServerLoopback(localServerPort, done, useExplicit
       log('Done reading stream, took millis:', readTimeDiffMs,
         'for kbytes:~', (clientTxBytes / 1000), 'of', (txShouldSendBytes / 1000));
 
-      log('Estimated read-bandwidth (kb/s):', readBandwidthEstimKbps.toFixed(3))
-      log('First-byte-write-to-read latency millis:', firstRxTime - clientWriteStartTime)
-      log('End-to-end transfer latency millis:', readDoneTime - clientWriteStartTime)
+      log('Estimated read-bandwidth (kb/s):', readBandwidthEstimKbps.toFixed(3));
+      log('First-byte-write-to-read latency millis:', firstRxTime - clientWriteStartTime);
+      log('End-to-end transfer latency millis:', readDoneTime - clientWriteStartTime);
       log('Client-side writing took millis:', clientWriteDoneTime - clientWriteStartTime);
 
       expect(clientTxBytes).toEqual(txShouldSendBytes);
