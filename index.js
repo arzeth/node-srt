@@ -3,6 +3,7 @@ const { AsyncSRT } = require('./src/async-api');
 const { SRTReadStream } = require('./src/srt-stream-readable');
 const { SRTWriteStream } = require('./src/srt-stream-writable');
 const { SRTServer } = require('./src/srt-server');
+const { SRTClientConnection } = require('./src/srt-client');
 const { setSRTLoggingLevel } = require('./src/logging');
 const {
   createAsyncWorker: createSRTAsyncWorker,
@@ -12,6 +13,7 @@ const {
 module.exports = {
   SRT,
   AsyncSRT,
+  SRTClientConnection,
   SRTServer,
   SRTReadStream,
   SRTWriteStream,
