@@ -90,7 +90,7 @@ export interface SRTStats {
   pktRcvFilterSupply: number
   pktRcvFilterLoss: number
   pktReorderTolerance: number
-  
+
   // Total
   pktSentUniqueTotal: number
   pktRecvUniqueTotal: number
@@ -194,7 +194,7 @@ export class SRT {
   /**
    * @returns epid
    */
-  epollCreate(): number
+  epollCreate(): number | SRTResult.SRT_ERROR
 
   /**
    *

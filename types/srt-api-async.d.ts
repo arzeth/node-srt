@@ -90,7 +90,7 @@ export class AsyncSRT {
   /**
    * @returns epid
    */
-  epollCreate(callback?: AsyncSRTCallback<number>): Promise<number>
+  epollCreate(callback?: AsyncSRTCallback<number>): Promise<number | SRTResult.SRT_ERROR>
 
   /**
    *
