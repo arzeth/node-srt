@@ -1,7 +1,6 @@
 const EventEmitter = require("events");
 const debug = require('debug')('srt-socket-async');
 
-const { SRT } = require('./srt');
 const { AsyncSRT } = require('./async-api');
 
 /**
@@ -15,8 +14,7 @@ const { AsyncSRT } = require('./async-api');
 class SRTSocketAsync extends EventEmitter {
 
   /**
-   *
-   * @param {number} port listening port number
+   * @param {number} port local port
    * @param {string} address local interface, optional, default: '0.0.0.0'
    */
   constructor(port, address = '0.0.0.0') {
