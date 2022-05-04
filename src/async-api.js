@@ -149,6 +149,11 @@ class AsyncSRT {
       return Promise.reject(err);
     }
 
+    if (args.some(v => v === undefined)) {
+      throw new Error(`AsyncSRT: Undefined value in argument list: ${traceCallToString(method, args)}.
+        Probably missing some function non-optional parameters when method called.`);
+    }
+
     return new Promise((resolve, reject) => {
       let timeout;
       let rejected = false;
