@@ -6,8 +6,9 @@ import { SRTSockOptValue } from './srt-api';
 import { AsyncSRT } from './srt-api-async';
 
 export interface SRTSocketConnection {
-  read(): Promise<Uint8Array | SRTResult.SRT_ERROR | null>;
+  read(bytes: number): Promise<Uint8Array | SRTResult.SRT_ERROR | null>;
   write(chunk: Buffer | Uint8Array): Promise<SRTResult>;
+
   getReaderWriter(): AsyncReaderWriter;
 }
 
@@ -39,7 +40,7 @@ export class SRTSocketAsync extends EventEmitter {
 
 export class SRTClientConnection extends SRTSocketAsync implements SRTSocketConnection {
   getReaderWriter(): AsyncReaderWriter;
-  read(): Promise<Uint8Array | SRTResult.SRT_ERROR>;
+  read(bytes: number): Promise<Uint8Array | SRTResult.SRT_ERROR>;
   write(chunk: Buffer | Uint8Array): Promise<SRTResult>;
 }
 
@@ -69,7 +70,8 @@ export class SRTServerConnection extends EventEmitter implements SRTSocketConnec
   readonly gotFirstData: boolean;
 
   getReaderWriter(): AsyncReaderWriter;
-  read(): Promise<Uint8Array | SRTResult.SRT_ERROR | null>;
+
+  read(bytes: number): Promise<Uint8Array | SRTResult.SRT_ERROR | null>;
   write(chunk: Buffer | Uint8Array): Promise<SRTResult>;
 
   close(): Promise<SRTResult | null>;
