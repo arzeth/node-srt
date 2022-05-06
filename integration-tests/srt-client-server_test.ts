@@ -1,8 +1,11 @@
-import { SRTClientConnection, SRTServer } from '../';
+import { SRT, SRTClientConnection, SRTServer } from '../';
 import { SRTServerConnection } from '../types/srt-server';
 
-jest.setTimeout(2000);
+jest.setTimeout(10000);
 
+new SRT().setLogLevel(7);
+
+///*
 describe('SRTClientConnection', () => {
 
   it('should connect to SRTServer instance', async () => {
@@ -14,10 +17,11 @@ describe('SRTClientConnection', () => {
 
       srtServer.on('connection', async (connection: SRTServerConnection) => {
         console.log('server-connection fd:', connection.fd);
-        await connection.write(new Uint8Array(1000
-          ));
-        const result = await srtClient.read(16 * 1024);
-        console.log('client result:', result)
+
+        await connection.write(new Uint8Array(1000));
+        srtClient.read(16 * 1024).then(result => {
+          console.log('client result:', result)
+        });
       });
 
       await srtServer.create()
@@ -31,3 +35,5 @@ describe('SRTClientConnection', () => {
     });
   });
 });
+
+//*/
