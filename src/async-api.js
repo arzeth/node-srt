@@ -9,6 +9,9 @@ const { SRT } = require('./srt');
 const DEFAULT_PROMISE_TIMEOUT_MS = 3000;
 
 const DEBUG = false;
+
+let idGen = 0;
+
 class AsyncSRT {
 
   /**
@@ -31,6 +34,12 @@ class AsyncSRT {
     this._workCbQueue = [];
 
     this._error = null;
+
+    this._id = ++idGen;
+  }
+
+  get id() {
+    return this._id;
   }
 
   /**
@@ -120,7 +129,7 @@ class AsyncSRT {
 
     const timestamp = performance.now();
 
-    DEBUG && debug('Sending call:', traceCallToString(method, args));
+    DEBUG && debug(this._id, 'Posting call:', traceCallToString(method, args));
 
     const transferList = extractTransferListFromParams(args);
 
@@ -268,7 +277,7 @@ class AsyncSRT {
    */
   write(socket, chunk, callback) {
     const byteLength = chunk.byteLength;
-    DEBUG && debug(`write ${byteLength} to socket:`, socket);
+    DEBUG && debug(`Writing ${byteLength} bytes to socket:`, socket);
     return this._createAsyncWorkPromise("write", [socket, chunk], callback)
       .then((result) => {
         if (result !== SRT.ERROR) {
