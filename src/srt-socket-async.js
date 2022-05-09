@@ -1,5 +1,4 @@
 const EventEmitter = require("events");
-const debug = require('debug')('srt-socket-async');
 
 const { AsyncSRT } = require('./async-api');
 
