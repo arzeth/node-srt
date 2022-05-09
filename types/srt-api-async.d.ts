@@ -7,7 +7,15 @@ export type AsyncSRTCallback<T> = (result: T) => void;
 
 export class AsyncSRT {
 
-  static TimeoutMs: number;
+  static TimeoutMs: number
+
+  readonly id: number
+
+  dispose(): boolean
+
+  isDisposed(): boolean
+
+  getError(): Error
 
   /**
    *
