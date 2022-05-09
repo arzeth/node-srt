@@ -30,6 +30,7 @@ export class SRTSocketAsync extends EventEmitter {
   readonly address: string;
   readonly port: number;
   readonly socket: number;
+  readonly asyncSrt: AsyncSRT;
 
   create(): Promise<SRTServer>;
   open(): Promise<SRTServer>;
