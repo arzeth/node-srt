@@ -5,7 +5,6 @@ jest.setTimeout(10000);
 
 new SRT().setLogLevel(7);
 
-///*
 describe('SRTClientConnection', () => {
 
   it('should connect to SRTServer instance', async () => {
@@ -36,4 +35,3 @@ describe('SRTClientConnection', () => {
   });
 });
 
-//*/
