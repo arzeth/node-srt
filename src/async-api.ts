@@ -1,18 +1,54 @@
-const { performance } = require("perf_hooks");
+import { SRTEpollResult, SRTFileDescriptor, SRTReadReturn, SRTSockOptValue, SRTStats } from "../types/srt-api";
+import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockStatus } from "./srt-api-enums";
+
+const perf_hooks = require("perf_hooks");
 
 const debug = require('debug')('srt-async');
 
 const { traceCallToString, extractTransferListFromParams } = require('./async-helpers');
 const { createAsyncWorker } = require('./async-worker-provider');
-const { SRT } = require('./srt');
 
 const DEFAULT_PROMISE_TIMEOUT_MS = 3000;
 
-const DEBUG = false;
+const DEBUG = true;
+
+const Perf: Performance = perf_hooks.performance;
 
 let idGen = 0;
 
-class AsyncSRT {
+export type AsyncSRTWorkerPost = {
+  method: string
+  args: any[]
+  timestamp: number
+}
+
+export type AsyncSRTWorkerMessage = {
+  result: SRTResult
+  timestamp: number
+  err: Error
+  call: {
+    method: string
+    args: any[]
+  }
+}
+
+export type AsyncSRTReturnValue =
+  null
+  | number
+  | Buffer
+  | SRTResult
+  | SRTFileDescriptor
+  | SRTReadReturn
+  | SRTSockOptValue
+  | SRTSockStatus
+  | SRTEpollResult[]
+  | SRTStats;
+
+export type AsyncSRTPromise = Promise<AsyncSRTReturnValue>;
+
+export type AsyncSRTCallback = (ret: AsyncSRTReturnValue) => void;
+
+export class AsyncSRT {
 
   /**
    * @static
@@ -20,8 +56,13 @@ class AsyncSRT {
    */
   static TimeoutMs = DEFAULT_PROMISE_TIMEOUT_MS;
 
+  private _worker: Worker;
+  private _workCbQueue: AsyncSRTCallback[] = [];
+  private _error: Error = null;
+  private _id: number = ++idGen;;
+
   /**
-   *
+   * // TODO: type worker-factory
    * @param {Function} workerFactory (Optional) A function returning the new Worker instance needed to construct this object. This is useful for app-side bundling purposes (see webpack "worker-loader"). The provider MUST return a new instance of a worker. Several Async API instances CAN NOT share the same Worker thread instance. By default, the worker will be created by a provider which will resolve the Worker path at runtime to load it (`async-worker.js`) from the actual source module (see `async-worker-provider.js`). Any other loader used with a bundler will be able to inject its own providing mechanism, which will allow the Worker to be loaded at runtime as part of bundled assets.
    */
   constructor(workerFactory = createAsyncWorker) {
@@ -29,16 +70,10 @@ class AsyncSRT {
     DEBUG && debug('Creating task-runner worker instance');
 
     this._worker = workerFactory();
-    this._worker.on('message', this._onWorkerMessage.bind(this));
-
-    this._workCbQueue = [];
-
-    this._error = null;
-
-    this._id = ++idGen;
+    this._worker.addEventListener('message', this._onWorkerMessage.bind(this));
   }
 
-  get id() {
+  get id(): number {
     return this._id;
   }
 
@@ -61,17 +96,12 @@ class AsyncSRT {
    * AsyncSRT instance, and can get retrieved on the user-side for any call
    * that returned an error code. Very much like SRT does internally and
    * on the native API.
-   *
-   * @returns {Error}
    */
-  getError() {
+  getError(): Error {
     return this._error;
   }
 
-  /**
-   * @returns {boolean}
-   */
-  isDisposed() {
+  isDisposed(): boolean {
     return !this._worker;
   }
 
@@ -79,28 +109,24 @@ class AsyncSRT {
    * @returns {Promise<number>} Resolves to exit code of Worker (only NodeJS)
    * @see https://nodejs.org/docs/latest-v14.x/api/worker_threads.html#worker_threads_worker_terminate
    */
-  dispose() {
+  dispose(): Promise<number> {
     const worker = this._worker;
     this._worker = null;
     if (this._workCbQueue.length !== 0) {
       DEBUG && console.warn(`AsyncSRT: flushing callback-queue with ${this._workCbQueue.length} remaining jobs awaiting.`);
       this._workCbQueue.length = 0;
     }
-    return worker.terminate();
+    // NodeJS workers terminate method return such Promise, as opposed to Web spec.
+    return (worker.terminate() as unknown) as Promise<number>;
   }
 
-
-  /**
-   * @private
-   * @param {object} data
-   */
-  _onWorkerMessage(data) {
+  private _onWorkerMessage(data: AsyncSRTWorkerMessage): void {
     // not sure if there can still be message event
     // after calling terminate
     // but let's guard from that state anyway.
     if (this.isDisposed()) return;
 
-    // const resolveTime = performance.now();
+    // const resolveTime = perf.now();
     const callback = this._workCbQueue.shift();
 
     if (data.err) {
@@ -111,46 +137,32 @@ class AsyncSRT {
       this._error = data.err;
     }
 
-    const {timestamp, result, workId} = data;
+    const {timestamp, result} = data;
     callback(result);
   }
 
-  /**
-   * @private
-   * @param {string} method
-   * @param {Array<any>} args
-   * @param {Function} callback
-   */
-  _postAsyncWork(method, args, callback) {
+  private _postAsyncWork(method: string, args: any[], callback: AsyncSRTCallback) {
     // we check here again because this gets called from
     // a promise-executor (potentially in different tick than promise-creation).
     if (this.isDisposed())
       return Promise.reject(new Error("AsyncSRT._postAsyncWork: has already been dispose()'d"));
 
-    const timestamp = performance.now();
+    const timestamp = Perf.now();
 
     DEBUG && debug(this._id, 'Posting call:', traceCallToString(method, args));
 
-    const transferList = extractTransferListFromParams(args);
+    const msgData: AsyncSRTWorkerPost = {method, args, /*workId,*/ timestamp};
+    const transferList: Transferable[] = extractTransferListFromParams(args);
 
     this._workCbQueue.push(callback);
-    this._worker.postMessage({method, args, /*workId,*/ timestamp}, transferList);
+    this._worker.postMessage(msgData, transferList);
   }
 
-  /**
-   * @private
-   * @param {string} method
-   * @param {Array<any>} args optional
-   * @param {Function} callback optional
-   * @param {boolean} useTimeout
-   * @param {number} timeoutMs
-   * @returns {Promise}
-   */
-  _createAsyncWorkPromise(method,
-    args = [],
-    callback = null,
-    useTimeout = false,
-    timeoutMs = AsyncSRT.TimeoutMs) {
+  private _createAsyncWorkPromise(method: string,
+    args: any[] = [],
+    callback: AsyncSRTCallback = null,
+    useTimeout: boolean = false,
+    timeoutMs: number = AsyncSRT.TimeoutMs): AsyncSRTPromise {
 
     if (this.isDisposed()) {
       const err = new Error("AsyncSRT_createAsyncWorkPromise: has already been dispose()'d");
@@ -189,65 +201,33 @@ class AsyncSRT {
   }
 
   /**
-   *
    * @param {boolean} sender default: false. only needed to specify if local/remote SRT ver < 1.3 or no other HSv5 support
    */
-  createSocket(sender = false, callback) {
+  createSocket(sender: boolean = false, callback: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("createSocket", [sender], callback);
   }
 
-  /**
-   *
-   * @param {number} socket
-   * @param {string} address
-   * @param {number} port
-   */
-  bind(socket, address, port, callback) {
+  bind(socket: number, address, port: number, callback: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("bind", [socket, address, port], callback);
   }
 
-  /**
-   *
-   * @param {number} socket
-   * @param {number} backlog
-   */
-  listen(socket, backlog, callback) {
+  listen(socket: number, backlog: number, callback: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("listen", [socket, backlog], callback);
   }
 
-  /**
-   *
-   * @param {number} socket
-   * @param {string} host
-   * @param {number} port
-   */
-  connect(socket, host, port, callback) {
+  connect(socket: number, host: string, port: string, callback: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("connect", [socket, host, port], callback);
   }
 
-  /**
-   *
-   * @param {number} socket
-   */
-  accept(socket, callback, useTimeout = false, timeoutMs = AsyncSRT.TimeoutMs) {
+  accept(socket: number, callback: AsyncSRTCallback, useTimeout = false, timeoutMs = AsyncSRT.TimeoutMs) {
     return this._createAsyncWorkPromise("accept", [socket], callback, useTimeout, timeoutMs);
   }
 
-  /**
-   *
-   * @param {number} socket
-   */
-  close(socket, callback) {
+  close(socket: number, callback: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("close", [socket], callback);
   }
 
-  /**
-   *
-   * @param {number} socket
-   * @param {number} chunkSize
-   * @returns {Promise<Buffer | SRTResult.SRT_ERROR | null>}
-   */
-  read(socket, chunkSize, callback) {
+  read(socket: number, chunkSize: number, callback: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("read", [socket, chunkSize], callback);
   }
 
@@ -275,76 +255,42 @@ class AsyncSRT {
    * @param {number} socket Socket identifier to write to
    * @param {Buffer | Uint8Array} chunk The underlying `buffer` (ArrayBufferLike) will get "neutered" by creating the async task. Pass in or use a copy respectively if concurrent data usage is intended.
    */
-  write(socket, chunk, callback) {
+  write(socket: number, chunk: Buffer | Uint8Array, callback: AsyncSRTCallback) {
     const byteLength = chunk.byteLength;
     DEBUG && debug(`Writing ${byteLength} bytes to socket:`, socket);
     return this._createAsyncWorkPromise("write", [socket, chunk], callback)
       .then((result) => {
-        if (result !== SRT.ERROR) {
+        if (result !== SRTResult.SRT_ERROR) {
           return byteLength;
         }
       });
   }
 
-  /**
-   *
-   * @param {number} socket
-   * @param {number} option
-   * @param {number} value
-   */
-  setSockOpt(socket, option, value, callback) {
+  setSockOpt(socket: number, option: SRTSockOpt, value: SRTSockOptValue, callback: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("setSockOpt", [socket, option, value], callback);
   }
 
-  /**
-   *
-   * @param {number} socket
-   * @param {number} option
-   */
-  getSockOpt(socket, option, callback) {
+  getSockOpt(socket: number, option: SRTSockOpt, callback: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("getSockOpt", [socket, option], callback);
   }
 
-  /**
-   *
-   * @param {number} socket
-   */
-  getSockState(socket, callback) {
+  getSockState(socket: number, callback: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("getSockState", [socket], callback);
   }
 
-  /**
-   * @returns {number} epid
-   */
-  epollCreate(callback) {
+  epollCreate(callback: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("epollCreate", [], callback);
   }
 
-  /**
-   *
-   * @param {number} epid
-   * @param {number} socket
-   * @param {number} events
-   */
-  epollAddUsock(epid, socket, events, callback) {
+  epollAddUsock(epid: number, socket: number, events: number, callback: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("epollAddUsock", [epid, socket, events], callback);
   }
 
-  /**
-   *
-   * @param {number} epid
-   * @param {number} msTimeOut
-   */
-  epollUWait(epid, msTimeOut, callback) {
+  epollUWait(epid: number, msTimeOut: number, callback: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("epollUWait", [epid, msTimeOut], callback);
   }
 
-  /**
-   *
-   * @param {number | SRTLoggingLevel} logLevel
-   * @returns {Promise<SRTResult>}
-   */
-  setLogLevel(logLevel, callback) {
+  setLogLevel(logLevel: number | SRTLoggingLevel, callback: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("setLogLevel", [logLevel], callback);
   }
 
@@ -354,13 +300,10 @@ class AsyncSRT {
    * @param {boolean} clear
    * @returns {Promise<SRTStats>}
    */
-  stats(socket, clear, callback) {
-    return this._createAsyncWorkPromise("stats", [socket, clear], callback);
+  stats(socket: number, clear: boolean, callback: AsyncSRTCallback): Promise<SRTStats> {
+    return this._createAsyncWorkPromise("stats", [socket, clear], callback) as Promise<SRTStats>;
   }
 }
-
-module.exports = {AsyncSRT};
-
 
 
 
