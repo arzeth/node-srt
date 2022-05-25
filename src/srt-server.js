@@ -257,8 +257,7 @@ class SRTServer extends SRTSocketAsync {
 
       if (status === SRT.SRTS_LISTENING) {
         const fd = await this.asyncSrt.accept(this.socket);
-        // no need to await the epoll subscribe result before continuing
-        this.asyncSrt.epollAddUsock(this._epid, fd, SRT.EPOLL_IN | SRT.EPOLL_ERR);
+        await this.asyncSrt.epollAddUsock(this._epid, fd, SRT.EPOLL_IN | SRT.EPOLL_ERR);
         debug("Accepted client connection with file-descriptor:", fd);
         // create new client connection handle
         // and emit accept event
