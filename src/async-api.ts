@@ -203,31 +203,31 @@ export class AsyncSRT {
   /**
    * @param {boolean} sender default: false. only needed to specify if local/remote SRT ver < 1.3 or no other HSv5 support
    */
-  createSocket(sender: boolean = false, callback: AsyncSRTCallback) {
+  createSocket(sender: boolean = false, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("createSocket", [sender], callback);
   }
 
-  bind(socket: number, address, port: number, callback: AsyncSRTCallback) {
+  bind(socket: number, address, port: number, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("bind", [socket, address, port], callback);
   }
 
-  listen(socket: number, backlog: number, callback: AsyncSRTCallback) {
+  listen(socket: number, backlog: number, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("listen", [socket, backlog], callback);
   }
 
-  connect(socket: number, host: string, port: string, callback: AsyncSRTCallback) {
+  connect(socket: number, host: string, port: number, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("connect", [socket, host, port], callback);
   }
 
-  accept(socket: number, callback: AsyncSRTCallback, useTimeout = false, timeoutMs = AsyncSRT.TimeoutMs) {
+  accept(socket: number, callback?: AsyncSRTCallback, useTimeout = false, timeoutMs = AsyncSRT.TimeoutMs) {
     return this._createAsyncWorkPromise("accept", [socket], callback, useTimeout, timeoutMs);
   }
 
-  close(socket: number, callback: AsyncSRTCallback) {
+  close(socket: number, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("close", [socket], callback);
   }
 
-  read(socket: number, chunkSize: number, callback: AsyncSRTCallback) {
+  read(socket: number, chunkSize: number, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("read", [socket, chunkSize], callback);
   }
 
@@ -255,7 +255,7 @@ export class AsyncSRT {
    * @param {number} socket Socket identifier to write to
    * @param {Buffer | Uint8Array} chunk The underlying `buffer` (ArrayBufferLike) will get "neutered" by creating the async task. Pass in or use a copy respectively if concurrent data usage is intended.
    */
-  write(socket: number, chunk: Buffer | Uint8Array, callback: AsyncSRTCallback) {
+  write(socket: number, chunk: Buffer | Uint8Array, callback?: AsyncSRTCallback) {
     const byteLength = chunk.byteLength;
     DEBUG && debug(`Writing ${byteLength} bytes to socket:`, socket);
     return this._createAsyncWorkPromise("write", [socket, chunk], callback)
@@ -266,31 +266,31 @@ export class AsyncSRT {
       });
   }
 
-  setSockOpt(socket: number, option: SRTSockOpt, value: SRTSockOptValue, callback: AsyncSRTCallback) {
+  setSockOpt(socket: number, option: SRTSockOpt, value: SRTSockOptValue, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("setSockOpt", [socket, option, value], callback);
   }
 
-  getSockOpt(socket: number, option: SRTSockOpt, callback: AsyncSRTCallback) {
+  getSockOpt(socket: number, option: SRTSockOpt, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("getSockOpt", [socket, option], callback);
   }
 
-  getSockState(socket: number, callback: AsyncSRTCallback) {
+  getSockState(socket: number, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("getSockState", [socket], callback);
   }
 
-  epollCreate(callback: AsyncSRTCallback) {
+  epollCreate(callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("epollCreate", [], callback);
   }
 
-  epollAddUsock(epid: number, socket: number, events: number, callback: AsyncSRTCallback) {
+  epollAddUsock(epid: number, socket: number, events: number, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("epollAddUsock", [epid, socket, events], callback);
   }
 
-  epollUWait(epid: number, msTimeOut: number, callback: AsyncSRTCallback) {
+  epollUWait(epid: number, msTimeOut: number, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("epollUWait", [epid, msTimeOut], callback);
   }
 
-  setLogLevel(logLevel: number | SRTLoggingLevel, callback: AsyncSRTCallback) {
+  setLogLevel(logLevel: number | SRTLoggingLevel, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("setLogLevel", [logLevel], callback);
   }
 
@@ -300,7 +300,7 @@ export class AsyncSRT {
    * @param {boolean} clear
    * @returns {Promise<SRTStats>}
    */
-  stats(socket: number, clear: boolean, callback: AsyncSRTCallback): Promise<SRTStats> {
+  stats(socket: number, clear: boolean, callback?: AsyncSRTCallback): Promise<SRTStats> {
     return this._createAsyncWorkPromise("stats", [socket, clear], callback) as Promise<SRTStats>;
   }
 }
