@@ -223,8 +223,8 @@ class SRTServer extends SRTSocketAsync {
     }
     result = await this.asyncSrt.listen(this.socket, SOCKET_LISTEN_BACKLOG_SIZE);
     if (result === SRT.ERROR) {
-      console.error(`SRT.listen() failed for address/port: ${this.address}/${this.port}`);
-      throw new Error(`SRT.listen() failed for address/port: ${this.address}/${this.port}`);
+      const err = `SRT.listen() failed on ${this.address}:${this.port}`;
+      throw new Error(err);
     }
     result = await this.asyncSrt.epollCreate();
     if (result === SRT.ERROR) {
@@ -287,8 +287,7 @@ class SRTServer extends SRTSocketAsync {
       DEBUG && debug("Got data from connection on fd:", fd);
       const connection = this.getConnectionByHandle(fd);
       if (!connection) {
-        console.warn("Got event for fd not in connections map:", fd);
-        return;
+        throw new Error("SRTEpollEvent: fd not in connections map:", fd);
       }
       connection.onData();
     }
