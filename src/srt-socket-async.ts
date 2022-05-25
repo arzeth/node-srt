@@ -1,9 +1,9 @@
-const EventEmitter = require("events");
-
-const { AsyncSRT } = require('./async-api');
+import { EventEmitter } from "events";
+import { SRTSockOptValue } from "../types/srt-api";
+import { AsyncSRT } from "./async-api";
+import { SRTSockOpt, SRTResult } from "./srt-api-enums";
 
 /**
- * @abstract
  * An abstraction of SRT socket ownership concerns.
  * To be used as a base class for either client/server-side implementations.
  *
@@ -12,59 +12,34 @@ const { AsyncSRT } = require('./async-api');
  * @emits created
  * @emits disposed
  */
-class SRTSocketAsync extends EventEmitter {
+export abstract class SRTSocketAsync extends EventEmitter {
+
+  readonly asyncSrt: AsyncSRT = new AsyncSRT();
+
+  private _socket: number | null = null;
 
   /**
-   * @param {number} port local port
-   * @param {string} address local interface, optional, default: '0.0.0.0'
+   * @param port local port
+   * @param address local interface, optional, default: '0.0.0.0'
    */
-  constructor(port, address = '0.0.0.0') {
+  constructor(readonly port: number, readonly address: string = '0.0.0.0') {
     super();
 
     if (!Number.isInteger(port) || port <= 0 || port > 65535)
       throw new Error('Need a valid port number but got: ' + port);
-
-    this._socket = null;
-    this._port = port;
-    this._address = address;
-    this._asyncSrt = new AsyncSRT();
   }
 
-  /**
-   * @returns {string}
-   */
-  get address() { return this._address; }
-
-  /**
-   * @returns {number}
-   */
-  get port() { return this._port; }
-
-  /**
-   * @returns {number}
-   */
-  get socket() {
-    return this._socket;
-  }
-
-  /**
-   * @returns {AsyncSRT}
-   */
-  get asyncSrt() {
-    return this._asyncSrt;
-  }
+  get socket() { return this._socket; }
 
   /**
    * Call this before `open`.
    * Call `setSocketFlags` after this.
-   *
-   * @return {Promise<T extends SRTSocketAsync>}
    */
-  async create() {
+  async create(): Promise<SRTSocketAsync> {
     if (this.socket !== null) {
       throw new Error('Can not call createSocket() twice, with socket already existing');
     }
-    this._socket = await this._asyncSrt.createSocket();
+    this._socket = await this.asyncSrt.createSocket() as number;
     this.emit('created');
     return this;
   }
@@ -84,38 +59,26 @@ class SRTSocketAsync extends EventEmitter {
    *
    * This method detaches all event-emitter listeners.
    *
-   * @returns {AsyncReaderWriter}
-   * @returns {Promise<void>}
    */
-  async dispose() {
+  async dispose(): Promise<void> {
     if (this.socket !== null) {
-      await this._asyncSrt.close(this.socket);
+      await this.asyncSrt.close(this.socket);
+      await this.asyncSrt.dispose();
       this._socket = null;
-    }
-    const asyncSrt = this._asyncSrt;
-    if (asyncSrt !== null) {
-      this._asyncSrt = null;
-      await asyncSrt.dispose();
     }
     this.emit('disposed');
     this.removeAllListeners();
   }
 
-  /**
-   *
-   * @param {SRTSockOpt[]} opts
-   * @param {SRTSockOptValue[]} values
-   * @returns {Promise<SRTResult[]>}
-   */
-  async setSocketFlags(opts, values) {
+  async setSocketFlags(opts: SRTSockOpt[], values: SRTSockOptValue[]): Promise<SRTResult[]> {
     if (this.socket === null) {
       throw new Error('There is no socket, call create() first');
     }
     if (opts.length !== values.length)
       throw new Error('opts and values must have same length');
     const promises = opts.map((opt, index) => {
-      return this._asyncSrt.setSockOpt(this.socket, opt, values[index]);
-    });
+      return this.asyncSrt.setSockOpt(this.socket, opt, values[index]);
+    }) as Promise<SRTResult>[];
     return Promise.all(promises);
   }
 
@@ -125,10 +88,8 @@ class SRTSocketAsync extends EventEmitter {
    *
    * Sub-class implementors should override `_open` method,
    * to init specific socket usage (call/listen for remote connection).
-   *
-   * @return {Promise<T extends SRTSocketAsync>}
    */
-  open() {
+  open(): Promise<SRTSocketAsync> {
     if (this.socket === null) {
       throw new Error('No socket created, did you call create() before?');
     }
@@ -136,13 +97,8 @@ class SRTSocketAsync extends EventEmitter {
   }
 
   /**
-   * @protected
-   * @abstract
    * Will safely get called from open method when socket existing.
    */
-  _open() {}
+  protected abstract _open(): Promise<SRTSocketAsync>;
 }
 
-module.exports = {
-  SRTSocketAsync
-};

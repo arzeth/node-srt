@@ -1,49 +1,34 @@
-const { SRT } = require('./srt');
-const { SRTSocketAsync } = require('./srt-socket-async');
-const { AsyncReaderWriter } = require('./async-reader-writer');
+import { AsyncReaderWriter } from "./async-reader-writer";
+import { SRTResult } from "./srt-api-enums";
+import { SRTSocketAsync } from "./srt-socket-async";
 
-class SRTClientConnection extends SRTSocketAsync {
+export class SRTClientConnection extends SRTSocketAsync {
 
-  /**
-   *
-   * @param {number} port local port
-   * @param {string} address local interface, optional, default: '0.0.0.0'
-   * @returns {Promise<SRTClient>}
-   */
-  static create(port, address) {
-    return new SRTClientConnection(port, address).create();
+  static create(port: number, address: string): Promise<SRTClientConnection> {
+    return new SRTClientConnection(port, address).create() as Promise<SRTClientConnection>;
   }
 
-  /**
-   *
-   * @param {number} port local port
-   * @param {string} address local interface, optional, default: '0.0.0.0'
-   */
-  constructor(port, address) {
+  constructor(port: number, address: string) {
     super(port, address);
   }
 
   /**
    * Use AsyncReaderWriter as the recommended way
    * for performing r/w ops on connections.
-   * @returns {AsyncReaderWriter}
    */
-  getReaderWriter() {
-    return new AsyncReaderWriter(this._asyncSrt, this.socket);
+  getReaderWriter(): AsyncReaderWriter {
+    return new AsyncReaderWriter(this.asyncSrt, this.socket);
   }
 
   /**
    * Lower-level access to async-handle read method of the client-owned socket.
    * For performing massive read-ops without worrying, rather see `getReaderWriter`.
-   * @param {number} bytes
-   * @returns {Promise<Buffer | SRTResult.SRT_ERROR | null>}
    */
-  async read(bytes) {
-    return await this._asyncSrt.read(this.socket, bytes);
+  async read(bytes: number) {
+    return await (this.asyncSrt.read(this.socket, bytes) as Promise<Buffer | SRTResult.SRT_ERROR | null>);
   }
 
   /**
-   *
    * Pass a packet buffer to write to the connection.
    *
    * The size of the buffer must not exceed the SRT payload MTU
@@ -62,27 +47,20 @@ class SRTClientConnection extends SRTSocketAsync {
    * When consuming from a larger piece of data,
    * chunks written will need to be slice copies of the source buffer.
    *
-   * @param {Buffer | Uint8Array} chunk
    */
-  async write(chunk) {
-    return await this._asyncSrt.write(this.socket, chunk);
+  async write(chunk: Buffer | Uint8Array) {
+    return await this.asyncSrt.write(this.socket, chunk);
   }
 
   /**
    * Call this after `create`.
    * Call `setSocketFlags` before calling this.
-   *
-   * @return {Promise<SRTServer>}
    */
-  async _open() {
-    let result = await this._asyncSrt.connect(this.socket, this.address, this.port);
-    if (result === SRT.ERROR) {
+  protected async _open(): Promise<SRTClientConnection> {
+    let result = await this.asyncSrt.connect(this.socket, this.address, this.port);
+    if (result === SRTResult.SRT_ERROR) {
       throw new Error('SRT.connect() failed');
     }
     return this;
   }
 }
-
-module.exports = {
-  SRTClientConnection
-};
