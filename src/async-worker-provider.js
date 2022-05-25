@@ -1,7 +1,9 @@
 const { Worker } = require('worker_threads');
 const { resolve } = require('path');
 
-const getAsyncWorkerPath = () => resolve(__dirname, './async-worker.js');
+const ASYNC_WORKER_PATH = './async-worker.js';
+
+const getAsyncWorkerPath = () => resolve(__dirname, ASYNC_WORKER_PATH);
 
 let _createAsyncWorker = () => {
   return new Worker(getAsyncWorkerPath());
