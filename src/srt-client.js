@@ -11,7 +11,7 @@ class SRTClientConnection extends SRTSocketAsync {
    * @returns {Promise<SRTClient>}
    */
   static create(port, address) {
-    return new SRTClient(port, address).create();
+    return new SRTClientConnection(port, address).create();
   }
 
   /**
