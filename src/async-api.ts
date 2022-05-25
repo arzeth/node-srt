@@ -1,9 +1,9 @@
+const debug = require('debug')('srt-async');
+
+import { performance as Perf } from "perf_hooks";
+
 import { SRTEpollResult, SRTFileDescriptor, SRTReadReturn, SRTSockOptValue, SRTStats } from "../types/srt-api";
 import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockStatus } from "./srt-api-enums";
-
-const perf_hooks = require("perf_hooks");
-
-const debug = require('debug')('srt-async');
 
 const { traceCallToString, extractTransferListFromParams } = require('./async-helpers');
 const { createAsyncWorker } = require('./async-worker-provider');
@@ -11,8 +11,6 @@ const { createAsyncWorker } = require('./async-worker-provider');
 const DEFAULT_PROMISE_TIMEOUT_MS = 3000;
 
 const DEBUG = true;
-
-const Perf: Performance = perf_hooks.performance;
 
 let idGen = 0;
 
