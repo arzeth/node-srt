@@ -1,7 +1,7 @@
 
 import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockStatus } from "../src/srt-api-enums";
 
-import { SRTReadReturn, SRTFileDescriptor, SRTEpollEvent, SRTSockOptValue, SRTStats } from "./srt-api";
+import { SRTReadReturn, SRTFileDescriptor, SRTEpollResult, SRTSockOptValue, SRTStats } from "./srt-api";
 
 export type AsyncSRTCallback<T> = (result: T) => void;
 
@@ -113,7 +113,7 @@ export class AsyncSRT {
    * @param epid
    * @param msTimeOut
    */
-  epollUWait(epid: number, msTimeOut: number, callback?: AsyncSRTCallback<SRTEpollEvent[]>): Promise<SRTEpollEvent[]>
+  epollUWait(epid: number, msTimeOut: number, callback?: AsyncSRTCallback<SRTEpollResult[]>): Promise<SRTEpollResult[]>
 
   /**
    *

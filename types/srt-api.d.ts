@@ -1,15 +1,15 @@
 import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockStatus } from "../src/srt-api-enums";
 
-export interface SRTEpollEvent {
-  socket: SRTFileDescriptor
-  events: number
-}
-
 export type SRTReadReturn = Uint8Array | null | SRTResult.SRT_ERROR;
 
 export type SRTFileDescriptor = number;
 
-export type SRTSockOptValue = boolean | number | string
+export type SRTSockOptValue = boolean | number | string;
+
+export interface SRTEpollResult {
+  socket: SRTFileDescriptor
+  events: number
+}
 
 export interface SRTStats {
   // global measurements
@@ -209,7 +209,7 @@ export class SRT {
    * @param epid
    * @param msTimeOut
    */
-  epollUWait(epid: number, msTimeOut: number): SRTEpollEvent[]
+  epollUWait(epid: number, msTimeOut: number): SRTEpollResult[]
 
   /**
    *
