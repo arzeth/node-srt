@@ -453,10 +453,10 @@ Napi::Value NodeSRT::Stats(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  SRT_TRACEBSTATS stats;
   Napi::Number socketValue = info[0].As<Napi::Number>();
   Napi::Boolean clear = info[1].As<Napi::Boolean>();
 
+  SRT_TRACEBSTATS stats;
   if (srt_bstats(socketValue, &stats, clear) == SRT_ERROR) {
 		Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
     return Napi::Number::New(env, SRT_ERROR);
