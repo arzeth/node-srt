@@ -9,7 +9,6 @@ interface SRTConnectionState {
   readonly address: string;
   readonly port: number;
 }
-
 interface SRTCallerState extends SRTConnectionState {
   readonly fd: SRTFileDescriptor | null;
   connect(callback: (state: SRTCallerState) => void);
