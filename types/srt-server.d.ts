@@ -40,6 +40,11 @@ export class SRTSocketAsync extends EventEmitter {
 }
 
 export class SRTClientConnection extends SRTSocketAsync implements SRTSocketConnection {
+
+  static create(port: number, address: string): Promise<SRTServer>;
+
+  constructor(port: number, address: string);
+
   getReaderWriter(): AsyncReaderWriter;
   read(bytes: number): Promise<Uint8Array | SRTResult.SRT_ERROR>;
   write(chunk: Buffer | Uint8Array): Promise<SRTResult>;
@@ -50,7 +55,8 @@ export class SRTServer extends SRTSocketAsync {
   static create(port: number, address?: string,
     epollPeriodMs?: number): Promise<SRTServer>;
 
-  constructor(port: number, address?: string, epollPeriodMs?: number);
+  constructor(port: number, address?: string,
+    epollPeriodMs?: number);
 
   create(): Promise<SRTServer>;
   open(): Promise<SRTServer>;
