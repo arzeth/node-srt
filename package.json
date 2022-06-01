@@ -51,7 +51,7 @@
     "del-cli": "^4.0.1",
     "git-clone": "^0.1.0",
     "node-addon-api": "^3.0.0",
-    "node-gyp": "^7.0.0",
+    "node-gyp": "^9.0.0",
     "vparse": "^1.1.0"
   },
   "bugs": {
