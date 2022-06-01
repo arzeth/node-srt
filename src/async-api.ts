@@ -68,7 +68,7 @@ export class AsyncSRT {
     DEBUG && debug('Creating task-runner worker instance');
 
     this._worker = workerFactory();
-    this._worker.addEventListener('message', this._onWorkerMessage.bind(this));
+    (this._worker as any).on('message', this._onWorkerMessage.bind(this));
   }
 
   get id(): number {
