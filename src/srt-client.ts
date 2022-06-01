@@ -57,7 +57,7 @@ export class SRTClientConnection extends SRTSocketAsync {
    * Call `setSocketFlags` before calling this.
    */
   protected async _open(): Promise<SRTClientConnection> {
-    let result = await this.asyncSrt.connect(this.socket, this.address, this.port);
+    const result = await this.asyncSrt.connect(this.socket, this.address, this.port);
     if (result === SRTResult.SRT_ERROR) {
       throw new Error('SRT.connect() failed');
     }

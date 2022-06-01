@@ -6,16 +6,16 @@ import { SRTServerConnection } from '../types/srt-server';
 
 new SRT().setLogLevel(7);
 
-let char = 0;
+const char = 0;
 
-let recvBytes = 0
+let recvBytes = 0;
 let sentBytes = 0;
 
 new Promise<void>(async (resolve, reject) => {
 
   const srtServer: SRTServer = new SRTServer(8002, '127.0.0.1');
   srtServer.on('connection', onConnectionServer);
-  await srtServer.create()
+  await srtServer.create();
   await srtServer.open();
 
   const srtClient = new SRTClientConnection(8002, '127.0.0.1');
@@ -37,17 +37,17 @@ new Promise<void>(async (resolve, reject) => {
 
       srtClient.read(16 * 1024)
         .then(onReadClient)
-        .catch(err => { throw new Error(err)});
+        .catch(err => { throw new Error(err);});
     }
   }
 
   function onReadClient(result: Uint8Array | SRTResult.SRT_ERROR) {
     if (result instanceof Uint8Array) {
       recvBytes += result.byteLength;
-      console.log('client read bytes:', recvBytes, result.byteLength)
+      console.log('client read bytes:', recvBytes, result.byteLength);
       console.log('client-server diff:', sentBytes - recvBytes);
     } else {
-      console.log('client read error')
+      console.log('client read error');
     }
   }
 

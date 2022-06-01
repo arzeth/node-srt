@@ -9,7 +9,7 @@ describe('SRTClientConnection', () => {
 
   it('should connect to SRTServer instance', async () => {
 
-    let char = 0;
+    const char = 0;
 
     return new Promise<void>(async (resolve, reject) => {
       const srtServer: SRTServer = new SRTServer(8002, '127.0.0.1');
@@ -19,11 +19,11 @@ describe('SRTClientConnection', () => {
 
         await connection.write(new Uint8Array(1000));
         srtClient.read(16 * 1024).then(result => {
-          console.log('client result:', result)
+          console.log('client result:', result);
         });
       });
 
-      await srtServer.create()
+      await srtServer.create();
       await srtServer.open();
 
       const srtClient = new SRTClientConnection(8002, '127.0.0.1');

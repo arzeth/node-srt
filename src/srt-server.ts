@@ -22,7 +22,7 @@ const SOCKET_LISTEN_BACKLOG_SIZE = 0xFFFF;
  */
 export class SRTServerConnection extends EventEmitter {
 
-  private _gotFirstData: boolean = false;
+  private _gotFirstData = false;
 
   constructor(private _asyncSrt: AsyncSRT, private _fd: number) {
     super();

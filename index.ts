@@ -11,7 +11,7 @@ const {
 } = require('./src/async-worker-provider');
 
 const isSRTInstalled = () => {
-  return !! SRT
+  return !! SRT;
 };
 
 export {

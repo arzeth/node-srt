@@ -57,7 +57,7 @@ export class AsyncSRT {
   private _worker: Worker;
   private _workCbQueue: AsyncSRTCallback[] = [];
   private _error: Error = null;
-  private _id: number = ++idGen;;
+  private _id: number = ++idGen;
 
   /**
    * // TODO: type worker-factory
@@ -159,7 +159,7 @@ export class AsyncSRT {
   private _createAsyncWorkPromise(method: string,
     args: any[] = [],
     callback: AsyncSRTCallback = null,
-    useTimeout: boolean = false,
+    useTimeout = false,
     timeoutMs: number = AsyncSRT.TimeoutMs): AsyncSRTPromise {
 
     if (this.isDisposed()) {
@@ -201,7 +201,7 @@ export class AsyncSRT {
   /**
    * @param {boolean} sender default: false. only needed to specify if local/remote SRT ver < 1.3 or no other HSv5 support
    */
-  createSocket(sender: boolean = false, callback?: AsyncSRTCallback) {
+  createSocket(sender = false, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("createSocket", [sender], callback);
   }
 
