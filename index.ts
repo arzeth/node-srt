@@ -25,7 +25,9 @@ export {
 };
 
 export * from "./src/srt-api-enums";
-export * from "./src/async-api-enums";
+export * from "./src/srt-api-types";
+
+export * from "./src/async-api-events";
 
 export enum SRTSocketMode {
   CALLER = 'caller',
