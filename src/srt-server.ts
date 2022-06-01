@@ -157,7 +157,7 @@ export class SRTServer extends SRTSocketAsync {
    * @param address local interface, optional, default: '0.0.0.0'
    * @param epollPeriodMs optional, default: EPOLL_PERIOD_MS_DEFAULT
    */
-  static create(port: number, address: string, epollPeriodMs: number): Promise<SRTServer> {
+  static create(port: number, address: string, epollPeriodMs?: number): Promise<SRTServer> {
     return new SRTServer(port, address, epollPeriodMs).create() as Promise<SRTServer>;
   }
 
