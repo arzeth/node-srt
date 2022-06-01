@@ -1,7 +1,9 @@
 /// <reference types="node" />
 
 import { Writable, Readable } from "stream";
-import { SRT, SRTFileDescriptor } from "./srt-api";
+
+import { SRTFileDescriptor } from "../src/srt-api-types";
+import { SRT } from "./srt";
 
 interface SRTConnectionState {
   readonly srt: SRT;

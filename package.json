@@ -2,7 +2,7 @@
   "name": "@eyevinn/srt",
   "version": "0.5.2",
   "description": "NodeJS native add-on SDK for Secure Reliable Transport (libSRT)",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
     "check-tsc": "tsc --build",
     "build": "npm run build-lib && npm run build-gyp",

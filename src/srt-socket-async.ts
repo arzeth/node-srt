@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { SRTSockOptValue } from "../types/srt-api";
+import { SRTSockOptValue } from "./srt-api-types";
 import { AsyncSRT } from "./async-api";
 import { SRTSockOpt, SRTResult } from "./srt-api-enums";
 

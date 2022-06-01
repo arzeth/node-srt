@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { SRTEpollResult } from "../types/srt-api";
+import { SRTEpollResult } from "./srt-api-types";
 import { AsyncSRT } from "./async-api";
 import { AsyncReaderWriter } from "./async-reader-writer";
 import { SRTEpollOpt, SRTResult, SRTSockStatus } from "./srt-api-enums";

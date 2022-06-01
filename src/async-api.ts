@@ -2,7 +2,7 @@ const debug = require('debug')('srt-async');
 
 import { performance as Perf } from "perf_hooks";
 
-import { SRTEpollResult, SRTFileDescriptor, SRTReadReturn, SRTSockOptValue, SRTStats } from "../types/srt-api";
+import { SRTEpollResult, SRTFileDescriptor, SRTReadReturn, SRTSockOptValue, SRTStats } from "./srt-api-types";
 import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockStatus } from "./srt-api-enums";
 
 const { traceCallToString, extractTransferListFromParams } = require('./async-helpers');
