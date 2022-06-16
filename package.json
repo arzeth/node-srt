@@ -1,6 +1,6 @@
 {
   "name": "@eyevinn/srt",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "NodeJS native add-on SDK for Secure Reliable Transport (libSRT)",
   "main": "index.js",
   "scripts": {
