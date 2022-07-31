@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "outDir": "tsc-lib",
-    "target": "ES5",
+    "module": "es2015",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "target": "ES2022",
     "typeRoots": ["./node_modules/@types"]
   },
   "include": ["src", "types"],
