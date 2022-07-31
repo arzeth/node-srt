@@ -7,7 +7,8 @@ describe("Async SRT API with async/await", () => {
 
     expect(socket).not.toEqual(SRT.ERROR);
 
-    //return await asyncSrt.dispose();
+    //asyncSrt.dispose();
+    return Promise.resolve();
   });
 
   it("can create an SRT socket for sending data", async () => {
@@ -16,6 +17,7 @@ describe("Async SRT API with async/await", () => {
 
     expect(socket).not.toEqual(SRT.ERROR);
 
-    //return await asyncSrt.dispose();
+    //asyncSrt.dispose();
+    return Promise.resolve();
   });
 });

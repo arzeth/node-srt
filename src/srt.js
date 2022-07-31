@@ -7,8 +7,8 @@ const dynLibPathDebug = path.join(__dirname, '../build/Debug/srt.node');
 const dynLibPathRelease = path.join(__dirname, '../build/Release/srt.node');
 const haveDebug = fs.existsSync(dynLibPathDebug);
 const haveRelease = fs.existsSync(dynLibPathRelease);
-function requireDebug() { return require('../build/Debug/srt.node') };
-function requireRelease() { return require('../build/Release/srt.node') };
+function requireDebug() { return require('../build/Debug/srt.node'); }
+function requireRelease() { return require('../build/Release/srt.node'); }
 
 if (haveDebug) {
   module.exports = requireDebug();

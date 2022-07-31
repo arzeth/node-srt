@@ -7,16 +7,17 @@
  * @returns {Array<Uint8Array>}
  */
 function sliceBufferToChunks(srcData, chunkMaxSize,
-    byteLength = srcData.byteLength, initialOffset = 0) {
+  byteLength = srcData.byteLength, initialOffset = 0) {
 
   const chunks = [];
   let relativeOffset = 0;
   for (let offset = initialOffset; relativeOffset < byteLength; offset += chunkMaxSize) {
     relativeOffset = offset - initialOffset;
     const size = Math.min(chunkMaxSize, byteLength - relativeOffset);
+    if (size === 0) break; // relativeOffset === byteLength
     const chunkBuf
           = Uint8Array.prototype
-              .slice.call(srcData, offset, offset + size);
+            .slice.call(srcData, offset, offset + size);
     chunks.push(chunkBuf);
   }
   return chunks;
@@ -28,7 +29,15 @@ function sliceBufferToChunks(srcData, chunkMaxSize,
  * @returns {number}
  */
 function getChunksTotalByteLength(chunks) {
-  return chunks.reduce((sumBytes, chunk) => (sumBytes + chunk.byteLength), 0)
+  return chunks.reduce((sumBytes, chunk) => (sumBytes + chunk.byteLength), 0);
+}
+
+/**
+ * @param {Array<Uint8Array>} chunks Input chunks
+ * @returns {Array<Uint8Array>} cloned data buffers
+ */
+function cloneChunks(chunks) {
+  return chunks.map(buf => new Uint8Array(buf));
 }
 
 /**
@@ -47,14 +56,29 @@ function copyChunksIntoBuffer(chunks, targetBuffer = null) {
     if (offset >= targetBuffer.length) {
       throw new Error('Target buffer to merge chunks in is too small');
     }
-    Buffer.from(chunks[i]).copy(targetBuffer, offset)
+    Buffer.from(chunks[i]).copy(targetBuffer, offset);
     offset += chunks[i].byteLength;
   }
   return targetBuffer;
 }
 
+/**
+ *
+ * @param {number} length
+ * @returns {Uint8Array}
+ */
+function generateRandomBytes(length) {
+  const buf = new Uint8Array(length);
+  for (let i = 0; i < buf.byteLength; i++) {
+    buf[i] = Math.round(0xFF * Math.random());
+  }
+  return buf;
+}
+
 module.exports = {
   getChunksTotalByteLength,
+  cloneChunks,
   copyChunksIntoBuffer,
-  sliceBufferToChunks
-}
+  sliceBufferToChunks,
+  generateRandomBytes
+};

@@ -5,5 +5,5 @@ const { SRTReadStream } = require('../index.js');
 describe("SRTReadStream", () => {
   it('can be constructed without throwing an exception', () => {
     new SRTReadStream();
-  })
+  });
 });

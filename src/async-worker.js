@@ -16,7 +16,7 @@ if (isMainThread) {
 }
 
 try {
-  run()
+  run();
 } catch(err) {
   console.error('AsyncSRT task-runner internal exception:', err);
 }
@@ -31,19 +31,13 @@ function run() {
 
   parentPort.on('close', () => {
     DEBUG && debug('AsyncSRT: Closing task-runner');
-  })
+  });
 
   parentPort.on('message', (data) => {
 
     if (!data.method) {
       throw new Error('Worker message needs `method` property');
     }
-
-    /*
-    if (!data.workId) {
-      throw new Error('Worker message needs `workId` property');
-    }
-    */
 
     if (data.args.some((arg) => arg === undefined)) {
       const err = new Error(
