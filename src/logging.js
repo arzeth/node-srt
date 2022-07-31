@@ -10,9 +10,9 @@ function setSRTLoggingLevel(level) {
   if (!srt) {
     srt = new SRT();
   }
-  srt.setLogLevel(level)
+  srt.setLogLevel(level);
 }
 
 module.exports = {
   setSRTLoggingLevel
-}
+};

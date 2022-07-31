@@ -228,7 +228,6 @@ Napi::Value NodeSRT::Write(const Napi::CallbackInfo& info) {
 
   Napi::Number socketId = info[0].As<Napi::Number>();
 
-  // Q: why not using char as data/template type?
   Napi::Buffer<uint8_t> chunk = info[1].As<Napi::Buffer<uint8_t>>();
 
   int result = srt_sendmsg2(socketId, (const char *)chunk.Data(), chunk.Length(), nullptr);
@@ -472,14 +471,14 @@ Napi::Value NodeSRT::Stats(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  SRT_TRACEBSTATS stats;
   Napi::Number socketId = info[0].As<Napi::Number>();
   Napi::Boolean clear = info[1].As<Napi::Boolean>();
 
+  SRT_TRACEBSTATS stats;
   if (srt_bstats(socketId, &stats, clear) == SRT_ERROR) {
-		Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
+    Napi::Error::New(env, srt_getlasterror_str()).ThrowAsJavaScriptException();
     return Napi::Number::New(env, SRT_ERROR);
-	}
+  }
 
   Napi::Object obj = Napi::Object::New(env);
 

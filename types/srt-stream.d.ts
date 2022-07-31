@@ -1,7 +1,9 @@
 /// <reference types="node" />
 
 import { Writable, Readable } from "stream";
-import { SRT, SRTFileDescriptor } from "./srt-api";
+
+import { SRTFileDescriptor } from "../src/srt-api-types";
+import { SRT } from "./srt";
 
 interface SRTConnectionState {
   readonly srt: SRT;
@@ -9,7 +11,6 @@ interface SRTConnectionState {
   readonly address: string;
   readonly port: number;
 }
-
 interface SRTCallerState extends SRTConnectionState {
   readonly fd: SRTFileDescriptor | null;
   connect(callback: (state: SRTCallerState) => void);

@@ -11,14 +11,14 @@ function isBufferOrTypedArray(elem) {
 
 function argsItemToString(elem) {
   if (isBufferOrTypedArray(elem)) {
-    return `${elem.constructor.name}<bytes=${elem.byteLength}>`
+    return `${elem.constructor.name}<bytes=${elem.byteLength}>`;
   } else {
     return elem;
   }
 }
 
 function traceCallToString(method, args) {
-  return  `SRT.${method}(...${argsToString(args)});`
+  return  `SRT.${method}(...${argsToString(args)});`;
 }
 
 /**
