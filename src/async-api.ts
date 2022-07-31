@@ -184,11 +184,11 @@ export class AsyncSRT {
         if (rejected) {
           // The reject thing only makes sense for Promise,
           // and users can manage this aspect themselves when using plain callbacks.
-          if (callback) callback(result);
+          callback?.(result);
           return;
         } else if (useTimeout) clearTimeout(timeout!);
         resolve(result);
-        if (callback) callback(result); // NOTE: the order doesn't matter for us,
+        callback?.(result); // NOTE: the order doesn't matter for us,
         //      but intuitively the promise result should probably be resolved first.
       };
       if (useTimeout) {
@@ -228,8 +228,8 @@ export class AsyncSRT {
     return this._createAsyncWorkPromise("close", [socket], callback);
   }
 
-  read(socket: number, chunkSize: number, callback?: AsyncSRTCallback) {
-    return this._createAsyncWorkPromise("read", [socket, chunkSize], callback);
+  read(socket: number, chunkSize: number, callback?: AsyncSRTCallback): Promise<SRTReadReturn> {
+    return this._createAsyncWorkPromise("read", [socket, chunkSize], callback) as Promise<SRTReadReturn>;
   }
 
   /**

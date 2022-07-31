@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { SRTEpollResult } from "./srt-api-types";
+import { SRTEpollResult, SRTReadReturn } from "./srt-api-types";
 import { AsyncSRT } from "./async-api";
 import { AsyncReaderWriter } from "./async-reader-writer";
 import { SRTEpollOpt, SRTResult, SRTSockStatus } from "./srt-api-enums";
@@ -58,9 +58,9 @@ export class SRTServerConnection extends EventEmitter {
    * Lower-level access to async-handle read method of the client-owned socket.
    * For performing massive read-ops without worrying, rather see `getReaderWriter`.
    * @param {number} bytes
-   * @returns {Promise<Buffer | SRTResult.SRT_ERROR | null>}
+   * @returns {Promise<SRTReadReturn>}
    */
-  async read(bytes: number): Promise<Buffer | SRTResult.SRT_ERROR | null> {
+  async read(bytes: number): Promise<SRTReadReturn> {
     return await this._asyncSrt.read(this.fd, bytes);
   }
 
