@@ -13,7 +13,10 @@ const env = process.env;
 const vparse = require('vparse');
 
 const SRT_REPO = env.NODE_SRT_REPO || "https://github.com/Haivision/srt.git";
-const SRT_CHECKOUT = "v1.4.4";
+//const SRT_CHECKOUT = "v1.5.0";
+const SRT_CHECKOUT = "618db39c320e5cad88b40b85097fc0eb67cb46c7";
+// ^ 2022-07-25
+// https://github.com/Haivision/srt/commit/618db39c320e5cad88b40b85097fc0eb67cb46c7
 
 // Need to patch up env in macOS 10.15+ (Catalina and further)
 // in order to link user-installed OpenSSL,
