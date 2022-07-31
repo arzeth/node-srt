@@ -56,9 +56,9 @@ export class AsyncSRT {
    */
   static TimeoutMs = DEFAULT_PROMISE_TIMEOUT_MS;
 
-  private _worker: Worker;
+  private _worker: null|Worker;
   private _workCbQueue: AsyncSRTCallback[] = [];
-  private _error: Error = null;
+  private _error: null | Error = null;
   private _id: number = ++idGen;
 
   /**
@@ -98,7 +98,7 @@ export class AsyncSRT {
    * that returned an error code. Very much like SRT does internally and
    * on the native API.
    */
-  getError(): Error {
+  getError(): AsyncSRT['_error'] {
     return this._error;
   }
 
@@ -118,7 +118,7 @@ export class AsyncSRT {
       this._workCbQueue.length = 0;
     }
     // NodeJS workers terminate method return such Promise, as opposed to Web spec.
-    return (worker.terminate() as unknown) as Promise<number>;
+    return worker ? (worker.terminate() as unknown) as Promise<number> : Promise.resolve(0);
   }
 
   private _onWorkerMessage(data: AsyncSRTWorkerMessage): void {
@@ -156,7 +156,7 @@ export class AsyncSRT {
     const transferList: Transferable[] = extractTransferListFromParams(args);
 
     this._workCbQueue.push(callback);
-    this._worker.postMessage(msgData, transferList);
+    this._worker?.postMessage(msgData, transferList);
   }
 
   private _createAsyncWorkPromise(method: string,
@@ -177,7 +177,7 @@ export class AsyncSRT {
     }
 
     return new Promise((resolve, reject) => {
-      let timeout;
+      let timeout: ReturnType<typeof setTimeout> | null = null;
       let rejected = false;
       const onResult = (result) => {
         // Q: signal somehow to app that timed-out call has had result after all? (only in case of using Promise..?)
@@ -186,7 +186,7 @@ export class AsyncSRT {
           // and users can manage this aspect themselves when using plain callbacks.
           if (callback) callback(result);
           return;
-        } else if (useTimeout) clearTimeout(timeout);
+        } else if (useTimeout) clearTimeout(timeout!);
         resolve(result);
         if (callback) callback(result); // NOTE: the order doesn't matter for us,
         //      but intuitively the promise result should probably be resolved first.
@@ -208,7 +208,7 @@ export class AsyncSRT {
     return this._createAsyncWorkPromise("createSocket", [sender], callback);
   }
 
-  bind(socket: number, address, port: number, callback?: AsyncSRTCallback) {
+  bind(socket: number, address: string, port: number, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("bind", [socket, address, port], callback);
   }
 

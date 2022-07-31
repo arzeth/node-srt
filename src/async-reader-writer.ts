@@ -14,7 +14,7 @@ export class AsyncReaderWriter {
   async writeChunks(buffer: Uint8Array | Buffer,
     writesPerTick: number = DEFAULT_WRITES_PER_TICK,
     mtuSize: number = DEFAULT_MTU_SIZE,
-    onWrite: Function = null): Promise<void> {
+    onWrite: null|Function = null): Promise<void> {
 
     const chunks = sliceBufferToChunks(buffer, mtuSize,
       buffer.byteLength, 0);
@@ -34,8 +34,8 @@ export class AsyncReaderWriter {
    */
   async readChunks(minBytesRead: number = DEFAULT_MTU_SIZE,
     readBufSize: number = DEFAULT_READ_BUFFER,
-    onRead: Function = null,
-    onError: Function = null): Promise<Uint8Array[]> {
+    onRead: null|Function = null,
+    onError: null|Function = null): Promise<Uint8Array[]> {
     return readChunks(this._asyncSrt, this._fd, minBytesRead, readBufSize, onRead, onError);
   }
 }

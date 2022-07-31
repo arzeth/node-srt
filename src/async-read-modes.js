@@ -10,8 +10,8 @@ const READ_BUF_SIZE = 16 * 1024;
  * @param {AsyncSRT} asyncSrt
  * @param {number} socketFd
  * @param {number} minBytesRead
- * @param {Function} onRead
- * @param {Function} onError
+ * @param {null|Function} onRead
+ * @param {null|Function} onError
  * @returns {Promise<Uint8Array[]>}
  */
 async function readChunks(asyncSrt, socketFd, minBytesRead, readBufSize = READ_BUF_SIZE,

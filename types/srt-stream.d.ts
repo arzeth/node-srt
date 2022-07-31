@@ -13,12 +13,12 @@ interface SRTConnectionState {
 }
 interface SRTCallerState extends SRTConnectionState {
   readonly fd: SRTFileDescriptor | null;
-  connect(callback: (state: SRTCallerState) => void);
-  close();
+  connect(callback: (state: SRTCallerState) => void): void;
+  close(): void;
 }
 
 export interface SRTListenerState extends SRTConnectionState {
-  listen(callback: (state: SRTListenerState) => void);
+  listen(callback: (state: SRTListenerState) => void): void;
 }
 
 export class SRTReadStream extends Readable implements SRTCallerState, SRTListenerState {
@@ -32,10 +32,10 @@ export class SRTReadStream extends Readable implements SRTCallerState, SRTListen
 
   constructor(address: string, port: number, opts?: unknown);
 
-  connect(callback: (state: SRTCallerState) => void);
-  close();
+  connect(callback: (state: SRTCallerState) => void): void;
+  close(): void;
 
-  listen(callback: (state: SRTListenerState) => void);
+  listen(callback: (state: SRTListenerState) => void): void;
 }
 
 export class SRTWriteStream extends Writable implements SRTCallerState {
@@ -48,6 +48,6 @@ export class SRTWriteStream extends Writable implements SRTCallerState {
 
   constructor(address: string, port: number, opts?: unknown);
 
-  connect(callback: (state: SRTCallerState) => void);
-  close();
+  connect(callback: (state: SRTCallerState) => void): void;
+  close(): void;
 }

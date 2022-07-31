@@ -87,7 +87,7 @@ SOFTWARE.
  * @param {AsyncSRT} asyncSrt
  * @param {number} socketFd
  * @param {Array<Uint8Array>} chunks
- * @param {Function} onWrite
+ * @param {null|Function} onWrite
  * @param {number} writesPerTick
  * @returns {Promise<void>}
  *

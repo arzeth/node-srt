@@ -25,6 +25,7 @@ export class SRTClientConnection extends SRTSocketAsync {
    * For performing massive read-ops without worrying, rather see `getReaderWriter`.
    */
   async read(bytes: number) {
+    if (!this.socket) return Promise.resolve(null);
     return await (this.asyncSrt.read(this.socket, bytes) as Promise<Buffer | SRTResult.SRT_ERROR | null>);
   }
 
@@ -49,6 +50,7 @@ export class SRTClientConnection extends SRTSocketAsync {
    *
    */
   async write(chunk: Buffer | Uint8Array) {
+    if (!this.socket) return Promise.reject();
     return await this.asyncSrt.write(this.socket, chunk);
   }
 
