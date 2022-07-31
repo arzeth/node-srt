@@ -25,11 +25,11 @@ jobs:
         npm test
       env:
         CI: true
-    - name: npm run test-jest
-      run: |
-        npm run test-jest -- --forceExit
-      env:
-        CI: true
+#    - name: npm run test-jest
+#      run: |
+#        npm run test-jest -- --forceExit
+#      env:
+#        CI: true
     - name: npm run check-tsc
       run: |
         npm run check-tsc

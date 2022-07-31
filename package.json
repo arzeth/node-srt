@@ -20,7 +20,7 @@
     "lint": "eslint . --ext .js --ext .ts",
     "postversion": "git push && git push --tags",
     "test": "NODE_OPTIONS=\"--es-module-specifier-resolution=node --experimental-modules\" jasmine",
-    "test-jest": "jest --detectOpenHandles"
+    "test-jest": "NODE_OPTIONS=\"--es-module-specifier-resolution=node --experimental-vm-modules --experimental-modules\" jest --detectOpenHandles"
   },
   "repository": {
     "type": "git",

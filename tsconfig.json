@@ -10,6 +10,7 @@
   "include": ["src", "types"],
   "files": [
     "./index.ts",
+    "./integration-tests/srt-client-server_test.ts",
     "./examples/srt.ts"
   ]
 }

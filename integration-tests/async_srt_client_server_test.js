@@ -1,17 +1,17 @@
-const { SRT, AsyncSRT, SRTServer } = require('../index');
+import { SRT, AsyncSRT, SRTServer } from '../build/index';
 
-const {
+import {
   writeChunksWithYieldingLoop,
   writeChunksWithExplicitScheduling
-} = require('../src/async-write-modes');
+} from '../build/src/async-write-modes';
 
-const {sliceBufferToChunks, copyChunksIntoBuffer, generateRandomBytes, cloneChunks} = require('../src/tools');
+import {sliceBufferToChunks, copyChunksIntoBuffer, generateRandomBytes, cloneChunks} from '../build/src/tools';
 
-const { performance } = require("perf_hooks");
+import { performance } from "perf_hooks";
 
 const now = performance.now;
 
-jest && jest.setTimeout(3000);
+import.meta.jest?.setTimeout(3000);
 
 // new SRT().setLogLevel(7);
 

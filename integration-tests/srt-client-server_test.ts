@@ -1,7 +1,8 @@
 import { SRT, SRTClientConnection, SRTServer } from '../';
-import { SRTServerConnection } from '../types/srt-server';
+import { SRTServerConnection } from '../src/srt-server';
 
-jest.setTimeout(10000);
+// @ts-ignore
+import.meta.jest?.setTimeout(10000);
 
 new SRT().setLogLevel(7);
 

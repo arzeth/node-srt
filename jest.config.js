@@ -147,15 +147,20 @@ export default {
 
   // The glob patterns Jest uses to detect test files
   testMatch: [
-    "/dist/**/*_spec.js",
-    "/**/*_spec.ts",
-    "/dist/**/*_test.js",
-    "/**/*_test.ts",
+    "/build/**/*_spec.js",
+    "/**/*_spec.js",
+    "/build/**/*_test.js",
+    "/**/*_test.js",
+
+    "/build/**/*_spec.mjs",
+    "/**/*_spec.mjs",
+    "/build/**/*_test.mjs",
+    "/**/*_test.mjs",
   ],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
   testPathIgnorePatterns: [
-    "/build/",
+    "/build/node_modules/",
     "/deps/",
     "/examples/",
     "/lib/",
@@ -180,7 +185,7 @@ export default {
   // timers: "real",
 
   // A map from regular expressions to paths to transformers
-  // transform: undefined,
+  transform: {},
 
   // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
   // transformIgnorePatterns: [
