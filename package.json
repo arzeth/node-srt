@@ -4,16 +4,19 @@
   "description": "Nodejs bindings for Secure Reliable Transport SDK",
   "main": "index.js",
   "scripts": {
-    "install": "npm run build-srt && npm run rebuild",
-    "build-srt": "node scripts/build-srt-sdk.js",
-    "rebuild": "node-gyp rebuild",
-    "rebuild-jn": "node-gyp rebuild -j $(echo \"console.log(require('os').cpus().length)\" | node)",
-    "clean": "node-gyp clean",
-    "test": "jasmine",
-    "test-jest": "jest --runInBand --detectOpenHandles",
-    "lint": "eslint . --ext .js --ext .ts",
     "check-tsc": "tsc examples/srt.ts --outDir ./tsc-lib",
-    "postversion": "git push && git push --tags"
+    "build": "npm run build-lib && npm run build-gyp",
+    "build-gyp": "npm run gyp-clean && npm run gyp-rebuild",
+    "build-lib": "node scripts/build-deps-srt.js",
+    "clean": "del -f build ; del -f deps",
+    "gyp-clean": "node-gyp clean",
+    "gyp-rebuild": "node-gyp rebuild",
+    "gyp-rebuild-jn": "node-gyp rebuild -j $(echo \"console.log(require('os').cpus().length)\" | node)",
+    "install": "npm run build",
+    "lint": "eslint . --ext .js --ext .ts",
+    "postversion": "git push && git push --tags",
+    "test": "jasmine",
+    "test-jest": "jest --detectOpenHandles"
   },
   "repository": {
     "type": "git",
@@ -27,18 +30,23 @@
     "Stephan Hesse <stephan@emliri.com>"
   ],
   "license": "MIT",
+  "engines": {
+    "npm": "=7"
+  },
   "devDependencies": {
     "@types/jest": "^26.0.10",
     "@types/node": "^14.0.23",
     "@typescript-eslint/eslint-plugin": "^3.6.1",
     "@typescript-eslint/parser": "^3.6.1",
+    "del-cli": "^3.0.1",
     "eslint": "^7.4.0",
     "eslint-plugin-jasmine": "^4.1.1",
     "jasmine": "^3.5.0",
     "jest": "^26.4.1",
     "ts-jest": "^26.2.0",
     "ts-node": "^8.10.2",
-    "typescript": "^3.9.6"
+    "typescript": "^3.9.6",
+    "vparse": "^1.1.0"
   },
   "dependencies": {
     "debug": "^4.1.1",

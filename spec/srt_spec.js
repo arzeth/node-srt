@@ -31,10 +31,10 @@ describe("SRT library", () => {
   it("can set SRT sockopt SRTO_MSS", () => {
     const srt = new SRT();
     const socket = srt.createSocket();
-    const result = srt.setSockOpt(socket, SRT.SRTO_MSS, 1052);
+    const result = srt.setSockFlag(socket, SRT.SRTO_MSS, 1052);
 
     expect(result).not.toEqual(SRT.ERROR);
-    const value = srt.getSockOpt(socket, SRT.SRTO_MSS);
+    const value = srt.getSockFlag(socket, SRT.SRTO_MSS);
 
     expect(value).toEqual(1052);
   });
@@ -42,10 +42,10 @@ describe("SRT library", () => {
   it("can set SRT sockopt SRTO_STREAMID", () => {
     const srt = new SRT();
     const socket = srt.createSocket();
-    const result = srt.setSockOpt(socket, SRT.SRTO_STREAMID, "STREAMID");
+    const result = srt.setSockFlag(socket, SRT.SRTO_STREAMID, "STREAMID");
 
     expect(result).not.toEqual(SRT.ERROR);
-    const value = srt.getSockOpt(socket, SRT.SRTO_STREAMID);
+    const value = srt.getSockFlag(socket, SRT.SRTO_STREAMID);
 
     expect(value).toEqual("STREAMID");
   });
@@ -53,10 +53,10 @@ describe("SRT library", () => {
   it("can set SRT socket in non-blocking mode", () => {
     const srt = new SRT();
     const socket = srt.createSocket();
-    const result = srt.setSockOpt(socket, SRT.SRTO_RCVSYN, false);
+    const result = srt.setSockFlag(socket, SRT.SRTO_RCVSYN, false);
 
     expect(result).not.toEqual(SRT.ERROR);
-    const value = srt.getSockOpt(socket, SRT.SRTO_RCVSYN);
+    const value = srt.getSockFlag(socket, SRT.SRTO_RCVSYN);
 
     expect(value).toEqual(false);
   });
@@ -64,7 +64,7 @@ describe("SRT library", () => {
   it("can setup non-blocking event poll", () => {
     const srt = new SRT();
     const socket = srt.createSocket();
-    srt.setSockOpt(socket, SRT.SRTO_RCVSYN, false);
+    srt.setSockFlag(socket, SRT.SRTO_RCVSYN, false);
     srt.bind(socket, "0.0.0.0", 1234);
     srt.listen(socket, 10);
     const epid = srt.epollCreate();

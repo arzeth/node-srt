@@ -9,8 +9,7 @@ export enum SRTSockOpt {
   SRTO_LINGER = 7,          // waiting for unsent data when closing
   SRTO_UDP_SNDBUF = 8,      // UDP sending buffer size
   SRTO_UDP_RCVBUF = 9,      // UDP receiving buffer size
-  // XXX Free space for 2 options
-  // after deprecated ones are removed
+  // (some space left)
   SRTO_RENDEZVOUS = 12,     // rendezvous connection mode
   SRTO_SNDTIMEO = 13,       // send() timeout
   SRTO_RCVTIMEO = 14,       // recv() timeout
@@ -23,11 +22,10 @@ export enum SRTSockOpt {
   SRTO_SENDER = 21,         // Sender mode (independent of conn mode), for encryption, tsbpd handshake.
   SRTO_TSBPDMODE = 22,      // Enable/Disable TsbPd. Enable -> Tx set origin timestamp, Rx deliver packet at origin time + delay
   SRTO_LATENCY = 23,        // NOT RECOMMENDED. SET: to both SRTO_RCVLATENCY and SRTO_PEERLATENCY. GET: same as SRTO_RCVLATENCY.
-  SRTO_TSBPDDELAY = 23,     // DEPRECATED. ALIAS: SRTO_LATENCY
   SRTO_INPUTBW = 24,        // Estimated input stream rate.
   SRTO_OHEADBW,             // MaxBW ceiling based on % over input stream rate. Applies when UDT_MAXBW=0 (auto).
-  SRTO_PASSPHRASE = 26,     // Crypto PBKDF2 Passphrase size[0,10..64] 0:disable crypto
-  SRTO_PBKEYLEN,            // Crypto key len in bytes {16,24,32} Default: 16 (128-bit)
+  SRTO_PASSPHRASE = 26,     // Crypto PBKDF2 Passphrase (must be 10..79 characters, or empty to disable encryption)
+  SRTO_PBKEYLEN,            // Crypto key len in bytes {16,24,32} Default: 16 (AES-128)
   SRTO_KMSTATE,             // Key Material exchange status (UDT_SRTKmState)
   SRTO_IPTTL = 29,          // IP Time To Live (passthru for system sockopt IPPROTO_IP/IP_TTL)
   SRTO_IPTOS,               // IP Type of Service (passthru for system sockopt IPPROTO_IP/IP_TOS)
@@ -36,10 +34,10 @@ export enum SRTSockOpt {
   SRTO_NAKREPORT = 33,      // Enable receiver to send periodic NAK reports
   SRTO_VERSION = 34,        // Local SRT Version
   SRTO_PEERVERSION,         // Peer SRT Version (from SRT Handshake)
-  SRTO_CONNTIMEO = 36,      // Connect timeout in msec. Ccaller default: 3000, rendezvous (x 10)
-  // deprecated: SRTO_TWOWAYDATA, SRTO_SNDPBKEYLEN, SRTO_RCVPBKEYLEN (@c below)
-  _DEPRECATED_SRTO_SNDPBKEYLEN = 38, // (needed to use inside the code without generating -Wswitch)
-  //
+  SRTO_CONNTIMEO = 36,      // Connect timeout in msec. Caller default: 3000, rendezvous (x 10)
+  SRTO_DRIFTTRACER = 37,    // Enable or disable drift tracer
+  SRTO_MININPUTBW = 38,     // Minimum estimate of input stream rate.
+   // (some space left)
   SRTO_SNDKMSTATE = 40,     // (GET) the current state of the encryption at the peer side
   SRTO_RCVKMSTATE,          // (GET) the current state of the encryption at the agent side
   SRTO_LOSSMAXTTL,          // Maximum possible packet reorder tolerance (number of packets to receive after loss to send lossreport)
@@ -56,8 +54,16 @@ export enum SRTSockOpt {
   SRTO_ENFORCEDENCRYPTION,  // Connection to be rejected or quickly broken when one side encryption set or bad password
   SRTO_IPV6ONLY,            // IPV6_V6ONLY mode
   SRTO_PEERIDLETIMEO,       // Peer-idle timeout (max time of silence heard from peer) in [ms]
-  // (some space left)
-  SRTO_PACKETFILTER = 60          // Add and configure a packet filter
+  SRTO_BINDTODEVICE,        // Forward the SOL_SOCKET/SO_BINDTODEVICE option on socket (pass packets only from that device)
+/*#if ENABLE_EXPERIMENTAL_BONDING
+  SRTO_GROUPCONNECT,        // Set on a listener to allow group connection
+  SRTO_GROUPSTABTIMEO,      // Stability timeout (backup groups) in [us]
+  SRTO_GROUPTYPE,           // Group type to which an accepted socket is about to be added, available in the handshake
+#endif*/
+  SRTO_PACKETFILTER = 60,   // Add and configure a packet filter
+  SRTO_RETRANSMITALGO = 61,  // An option to select packet retransmission algorithm
+
+  SRTO_E_SIZE // Always last element, not a valid option.
 }
 
 export enum SRTEpollOpt

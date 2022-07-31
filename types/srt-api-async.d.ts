@@ -1,7 +1,7 @@
 
 import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockStatus } from "../src/srt-api-enums";
 
-import { SRTReadReturn, SRTFileDescriptor, SRTEpollEvent, SRTSockOptValue, SRTStats } from "./srt-api"
+import {SRTReadReturn, SRTFileDescriptor, SRTEpollEvent, SRTSockOptValue, SRTStats} from "./srt-api"
 
 export type AsyncSRTCallback<T> = (result: T) => void;
 
@@ -72,14 +72,14 @@ export class AsyncSRT {
    * @param option
    * @param value
    */
-  setSockOpt(socket: number, option: SRTSockOpt, value: SRTSockOptValue, callback?: AsyncSRTCallback<SRTResult>): Promise<SRTResult>
+  setSockFlag(socket: number, option: SRTSockOpt, value: SRTSockOptValue, callback?: AsyncSRTCallback<SRTResult>): Promise<SRTResult>
 
   /**
    *
    * @param socket
    * @param option
    */
-  getSockOpt(socket: number, option: SRTSockOpt, callback?: AsyncSRTCallback<SRTSockOptValue>): Promise<SRTSockOptValue>
+  getSockFlag(socket: number, option: SRTSockOpt, callback?: AsyncSRTCallback<SRTSockOptValue>): Promise<SRTSockOptValue>
 
   /**
    *
@@ -90,7 +90,7 @@ export class AsyncSRT {
   /**
    * @returns epid
    */
-  epollCreate(callback?: AsyncSRTCallback<number>): Promise<number>
+  epollCreate(callback?: AsyncSRTCallback<number>): Promise<number | SRTResult.SRT_ERROR>
 
   /**
    *

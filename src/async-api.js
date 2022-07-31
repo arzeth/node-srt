@@ -1,19 +1,14 @@
-const { Worker } = require('worker_threads');
-const path = require('path');
-const {performance} = require("perf_hooks");
+const { performance } = require("perf_hooks");
 
 const debug = require('debug')('srt-async');
 
 const { traceCallToString, extractTransferListFromParams } = require('./async-helpers');
-const { SRT } = require('../build/Release/node_srt.node');
+const { createAsyncWorker } = require('./async-worker-provider');
+const { SRT } = require('./srt');
 
 const DEFAULT_PROMISE_TIMEOUT_MS = 3000;
 
 const DEBUG = false;
-
-/*
-const WORK_ID_GEN_MOD = 0xFFF;
-*/
 
 class AsyncSRT {
 
@@ -23,17 +18,45 @@ class AsyncSRT {
    */
   static TimeoutMs = DEFAULT_PROMISE_TIMEOUT_MS;
 
-  constructor() {
+  /**
+   *
+   * @param {Function} workerFactory (Optional) A function returning the new Worker instance needed to construct this object. This is useful for app-side bundling purposes (see webpack "worker-loader"). The provider MUST return a new instance of a worker. Several Async API instances CAN NOT share the same Worker thread instance. By default, the worker will be created by a provider which will resolve the Worker path at runtime to load it (`async-worker.js`) from the actual source module (see `async-worker-provider.js`). Any other loader used with a bundler will be able to inject its own providing mechanism, which will allow the Worker to be loaded at runtime as part of bundled assets.
+   */
+  constructor(workerFactory = createAsyncWorker) {
 
     DEBUG && debug('Creating task-runner worker instance');
 
-    this._worker = new Worker(path.resolve(__dirname, './async-worker.js'));
+    this._worker = workerFactory();
     this._worker.on('message', this._onWorkerMessage.bind(this));
-    /*
-    this._workIdGen = 0;
-    this._workCbMap = new Map();
-    */
     this._workCbQueue = [];
+
+    this._error = null;
+  }
+
+  /**
+   * Retrieve the Error for any failure result.
+   *
+   * Generally, to handle errors, the resulting return value needs to be checked,
+   * in most cases for being SRT_ERROR. Not by using any type of exception-catch.
+   *
+   * Meaning, also the promise will not get rejected for "normal" SRT failures,
+   * i.e try-catch-await will not throw on these methods (only if there is
+   * an unexpected error, but usually the async-API methods here don't need
+   * to expect errors thrown in normal ops and typical error handling).
+   *
+   * For example, typically the return value of the API call will be SRT_ERROR (-1).
+   * But we will not throw the exception on the API call (since the call returns
+   * with this error value).
+   *
+   * Instead, the error gets retrieved into this storage for each
+   * AsyncSRT instance, and can get retrieved on the user-side for any call
+   * that returned an error code. Very much like SRT does internally and
+   * on the native API.
+   *
+   * @returns {Error}
+   */
+  getError() {
+    return this._error;
   }
 
   /**
@@ -43,10 +66,17 @@ class AsyncSRT {
     const worker = this._worker;
     this._worker = null;
     if (this._workCbQueue.length !== 0) {
-      console.warn(`AsyncSRT: flushing callback-queue with ${this._workCbQueue.length} remaining jobs awaiting.`);
+      DEBUG && console.warn(`AsyncSRT: flushing callback-queue with ${this._workCbQueue.length} remaining jobs awaiting.`);
       this._workCbQueue.length = 0;
     }
     return worker.terminate();
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  isDisposed() {
+    return !this._worker;
   }
 
   /**
@@ -57,20 +87,20 @@ class AsyncSRT {
     // not sure if there can still be message event
     // after calling terminate
     // but let's guard from that state anyway.
-    if (this._worker === null) return;
+    if (this.isDisposed()) return;
 
-    const resolveTime = performance.now();
+    //const resolveTime = performance.now();
     const callback = this._workCbQueue.shift();
 
     if (data.err) {
-      console.error('AsyncSRT: Error from task-runner:', data.err.message,
+      DEBUG && console.error('AsyncSRT: Error from task-runner:', data.err.message,
         '\n  Binding call:', traceCallToString(data.call.method, data.call.args),
         //'\n  Stacktrace:', data.err.stack
         );
-      return;
+      this._error = data.err;
     }
 
-    const {timestamp, result, workId} = data;
+    const {timestamp, result} = data;
     callback(result);
   }
 
@@ -81,20 +111,13 @@ class AsyncSRT {
    * @param {Function} callback
    */
   _postAsyncWork(method, args, callback) {
-    const timestamp = performance.now();
 
-    // not really needed atm,
-    // only if the worker spawns async jobs itself internally
-    // and thus the queuing order of jobs would not be preserved
-    // across here and the worker side.
-    /*
-    if (this._workCbMap.size >= WORK_ID_GEN_MOD - 1) {
-      throw new Error('Can`t post more async work: Too many awaited callbacks unanswered in queue');
-    }
-    const workId = this._workIdGen;
-    this._workIdGen = (this._workIdGen + 1) % WORK_ID_GEN_MOD;
-    this._workCbMap.set(workId, callback);
-    */
+    // we check here again because this gets called from
+    // a promise-executor (potentially in different tick than promise-creation).
+    if (this.isDisposed())
+      return Promise.reject(new Error("AsyncSRT._postAsyncWork: has already been dispose()'d"));
+
+    const timestamp = performance.now();
 
     DEBUG && debug('Sending call:', traceCallToString(method, args));
 
@@ -111,12 +134,19 @@ class AsyncSRT {
    * @param {Function} callback optional
    * @param {boolean} useTimeout
    * @param {number} timeoutMs
+   * @returns {Promise}
    */
   _createAsyncWorkPromise(method,
     args = [],
     callback = null,
     useTimeout = false,
     timeoutMs = AsyncSRT.TimeoutMs) {
+
+    if (this.isDisposed()) {
+      const err = new Error("AsyncSRT_createAsyncWorkPromise: has already been dispose()'d");
+      console.error(err);
+      return Promise.reject(err);
+    }
 
     return new Promise((resolve, reject) => {
       let timeout;
@@ -145,7 +175,7 @@ class AsyncSRT {
 
   /**
    *
-   * @param {boolean} sender default: false. only needed to specify if local/remote SRT ver < 1.3 or no other HSv5 support
+   * @param {boolean} sender default: `false`. only needed to specify if local/remote SRT ver < 1.3 or no other HSv5 support
    */
   createSocket(sender = false, callback) {
     return this._createAsyncWorkPromise("createSocket", [sender], callback);
@@ -208,25 +238,25 @@ class AsyncSRT {
 
   /**
    *
-   * Pass a packet buffer to write to the socket.
+   * Pass message/buffer data to write to the socket
+   * (depending on `SRTO_MESSAGEAPI` socket-flag enabled).
    *
+   * When socket is in MessageAPI mode: (!)
    * The size of the buffer must not exceed the SRT payload MTU
-   * (usually 1316 bytes).
+   * (usually 1316 bytes). (Otherwise the call will resolve to SRT_ERROR.)
+   * When consuming from a larger piece of data,
+   * chunks written will therefore need to be slice copies of the source buffer
    *
-   * Otherwise the call will resolve to SRT_ERROR.
-   *
-   * A system-specific socket-message error message may show in logs as enabled
-   * where the error is thrown (on the binding call to the native SRT API),
-   * and in the async API internals as it gets propagated back from the task-runner).
+   * A (somewhat OS-specific) message/socket-error may show in logs as enabled
+   * where the error is thrown: on the binding call to the native SRT APIs,
+   * and in the async API internals as it gets propagated back from the task-runner.
    *
    * Note that any underlying data buffer passed in
    * will be *neutered* by our worker thread and
    * therefore become unusable (i.e go to detached state, `byteLengh === 0`)
    * for the calling thread of this method.
-   * When consuming from a larger piece of data,
-   * chunks written will need to be slice copies of the source buffer.
    *
-   * For a usage example, check the performance & smoke testbench.
+   * For a usage example, see client/server examples in tests.
    *
    * @param {number} socket Socket identifier to write to
    * @param {Buffer | Uint8Array} chunk The underlying `buffer` (ArrayBufferLike) will get "neutered" by creating the async task. Pass in or use a copy respectively if concurrent data usage is intended.
@@ -248,8 +278,8 @@ class AsyncSRT {
    * @param {number} option
    * @param {number} value
    */
-  setSockOpt(socket, option, value, callback) {
-    return this._createAsyncWorkPromise("setSockOpt", [socket, option, value], callback);
+  setSockFlag(socket, option, value, callback) {
+    return this._createAsyncWorkPromise("setSockFlag", [socket, option, value], callback);
   }
 
   /**
@@ -257,8 +287,8 @@ class AsyncSRT {
    * @param {number} socket
    * @param {number} option
    */
-  getSockOpt(socket, option, callback) {
-    return this._createAsyncWorkPromise("getSockOpt", [socket, option], callback);
+  getSockFlag(socket, option, callback) {
+    return this._createAsyncWorkPromise("getSockFlag", [socket, option], callback);
   }
 
   /**
