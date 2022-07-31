@@ -1,12 +1,14 @@
-const debug = require('debug')('srt-async');
+import { default as _debug } from "debug";
+const debug = _debug('srt-async');
+//const debug = (await import('debug'))('srt-async');
 
 import { performance as Perf } from "perf_hooks";
 
 import { SRTEpollResult, SRTFileDescriptor, SRTReadReturn, SRTSockOptValue, SRTStats } from "./srt-api-types";
 import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockStatus } from "./srt-api-enums";
 
-const { traceCallToString, extractTransferListFromParams } = require('./async-helpers');
-const { createAsyncWorker } = require('./async-worker-provider');
+import { traceCallToString, extractTransferListFromParams } from './async-helpers';
+import { createAsyncWorker } from './async-worker-provider';
 
 const DEFAULT_PROMISE_TIMEOUT_MS = 3000;
 
@@ -67,6 +69,7 @@ export class AsyncSRT {
 
     DEBUG && debug('Creating task-runner worker instance');
 
+    // @ts-ignore
     this._worker = workerFactory();
     (this._worker as any).on('message', this._onWorkerMessage.bind(this));
   }
@@ -267,14 +270,14 @@ export class AsyncSRT {
   setSockFlag(socket: number, option: SRTSockOpt, value: SRTSockOptValue, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("setSockFlag", [socket, option, value], callback);
   }
-  setSockOpt(...args: Parametrs<AsyncSRT['setSockFlag']>) {
+  setSockOpt(...args: Parameters<AsyncSRT['setSockFlag']>) {
     return this.setSockFlag(...args)
   }
 
   getSockFlag(socket: number, option: SRTSockOpt, callback?: AsyncSRTCallback) {
     return this._createAsyncWorkPromise("getSockFlag", [socket, option], callback);
   }
-  getSockOpt(...args: Parametrs<AsyncSRT['getSockFlag']>) {
+  getSockOpt(...args: Parameters<AsyncSRT['getSockFlag']>) {
     return this.getSockFlag(...args)
   }
 

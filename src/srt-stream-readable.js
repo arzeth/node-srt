@@ -1,6 +1,8 @@
-const { Readable } = require('stream');
-const { SRT } = require('./srt');
-const debug = require('debug')('srt-read-stream');
+import { Readable } from 'stream';
+import SRT from './srt';
+//const debug = import('debug')('srt-read-stream');
+import { default as _debug } from "debug";
+const debug = _debug('srt-read-stream');
 
 const CONNECTION_ACCEPT_POLLING_INTERVAL_MS = 50;
 const READ_WAIT_INTERVAL_MS = 50;
@@ -19,7 +21,7 @@ const SOCKET_LISTEN_BACKLOG = 10;
  * })
  *
  */
-class SRTReadStream extends Readable {
+export default class SRTReadStream extends Readable {
   // Q: opts not used ?
   // Q: not better if port (mandatory) is before, and address is optional (default to "0.0.0.0")?
   constructor(address, port, opts) {
@@ -203,7 +205,3 @@ class SRTReadStream extends Readable {
     if (cb) cb(err);
   }
 }
-
-module.exports = {
-  SRTReadStream
-};

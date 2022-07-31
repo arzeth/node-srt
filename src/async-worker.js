@@ -1,12 +1,15 @@
-const {
+import {
   isMainThread, parentPort
-} = require('worker_threads');
+} from 'worker_threads';
 
-const debug = require('debug')('srt-async-worker');
 
-const { SRT } = require('./srt');
+import { default as _debug } from "debug";
+const debug = _debug('srt-async-worker');
+//const debug = (await import('debug'))('srt-async-worker');
 
-const { argsToString, traceCallToString, extractTransferListFromParams } = require('./async-helpers');
+import SRT from './srt';
+
+import { argsToString, traceCallToString, extractTransferListFromParams } from './async-helpers';
 
 const DEBUG = false;
 const DRY_RUN = false;

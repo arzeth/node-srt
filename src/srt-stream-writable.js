@@ -1,8 +1,9 @@
-const { Writable } = require('stream');
-const { SRT } = require('./srt');
-const debug = require('debug')('srt-write-stream');
+import { Writable } from 'stream';
+import SRT from './srt';
+import { default as _debug } from "debug";
+const debug = _debug('srt-write-stream');
 
-class SRTWriteStream extends Writable {
+export default class SRTWriteStream extends Writable {
   constructor(address, port, opts) {
     super();
     this.srt = new SRT();
@@ -46,7 +47,3 @@ class SRTWriteStream extends Writable {
     this.close();
   }
 }
-
-module.exports = {
-  SRTWriteStream
-};

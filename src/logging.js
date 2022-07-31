@@ -1,4 +1,4 @@
-const { SRT } = require('./srt');
+import SRT from './srt';
 
 let srt = null;
 
@@ -13,6 +13,6 @@ function setSRTLoggingLevel(level) {
   srt.setLogLevel(level);
 }
 
-module.exports = {
-  setSRTLoggingLevel
+export {
+  setSRTLoggingLevel,
 };

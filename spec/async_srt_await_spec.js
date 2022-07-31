@@ -1,4 +1,4 @@
-const { SRT, AsyncSRT } = require('../index.js');
+import { SRT, AsyncSRT } from '../build/index.js';
 
 describe("Async SRT API with async/await", () => {
   it("can create an SRT socket", async () => {

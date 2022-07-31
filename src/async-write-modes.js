@@ -1,4 +1,4 @@
-const { SRT } = require('./srt');
+import SRT from './srt';
 
 /**
  * @module async-write-modes
@@ -202,7 +202,7 @@ function writeChunksWithExplicitScheduling(asyncSrt, socketFd, chunks,
 
 }
 
-module.exports = {
+export {
   writeChunksWithYieldingLoop,
-  writeChunksWithExplicitScheduling
+  writeChunksWithExplicitScheduling,
 };

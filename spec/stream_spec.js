@@ -1,6 +1,6 @@
-const fs = require('fs');
+import fs from 'fs';
+import { SRTReadStream } from '../build/index.js';
 const dest = fs.createWriteStream('/dev/null');
-const { SRTReadStream } = require('../index.js');
 
 describe("SRTReadStream", () => {
   it('can be constructed without throwing an exception', () => {

@@ -1,4 +1,4 @@
-const { SRT } = require('./srt');
+import SRT from './srt';
 
 const READ_BUF_SIZE = 16 * 1024;
 
@@ -42,7 +42,7 @@ async function readChunks(asyncSrt, socketFd, minBytesRead, readBufSize = READ_B
   return chunks;
 }
 
-module.exports = {
+export {
   READ_BUF_SIZE,
-  readChunks
+  readChunks,
 };

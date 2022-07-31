@@ -2,15 +2,17 @@
 
 "use strict";
 
-const path = require('path');
-const fs = require('fs');
-const process = require('process');
-const clone = require('git-clone');
-const del = require('del');
-const { spawnSync } = require('child_process');
-const os = require('os');
+import path from 'path';
+import fs from 'fs';
+import process from 'process';
+import clone from 'git-clone';
+import del from 'del';
+import { spawnSync } from 'child_process';
+import os from 'os';
+import vparse from 'vparse';
+import __dirname from '../src/__dirname.js';
+
 const env = process.env;
-const vparse = require('vparse');
 
 const SRT_REPO = env.NODE_SRT_REPO || "https://github.com/Haivision/srt.git";
 //const SRT_CHECKOUT = "v1.5.0";

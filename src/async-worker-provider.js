@@ -1,5 +1,6 @@
-const { Worker } = require('worker_threads');
-const { resolve } = require('path');
+import { Worker } from 'worker_threads';
+import { resolve } from 'path';
+import __dirname from './__dirname';
 
 const ASYNC_WORKER_PATH = './async-worker.js';
 
@@ -17,7 +18,7 @@ createAsyncWorker.overrideModuleScopeImpl = (func) => {
   _createAsyncWorker = func;
 };
 
-module.exports = {
+export {
   createAsyncWorker,
-  getAsyncWorkerPath
+  getAsyncWorkerPath,
 };

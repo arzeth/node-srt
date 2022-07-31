@@ -37,9 +37,9 @@ function extractTransferListFromParams(args) {
   return transferList;
 }
 
-module.exports = {
+export {
   argsToString,
   traceCallToString,
   isBufferOrTypedArray,
-  extractTransferListFromParams
+  extractTransferListFromParams,
 };

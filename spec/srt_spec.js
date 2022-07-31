@@ -1,4 +1,4 @@
-const { SRT } = require('../index.js');
+import { SRT } from '../build/index.js';
 
 describe("SRT library", () => {
   it("exposes constants", () => {

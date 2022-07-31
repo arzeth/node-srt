@@ -1,14 +1,14 @@
-const { SRT } = require ('./src/srt');
+import SRT from './src/srt';
 
-const { SRTReadStream } = require('./src/srt-stream-readable');
-const { SRTWriteStream } = require('./src/srt-stream-writable');
+import SRTReadStream from './src/srt-stream-readable';
+import SRTWriteStream from './src/srt-stream-writable';
 
-const { setSRTLoggingLevel } = require('./src/logging');
+import { setSRTLoggingLevel } from './src/logging';
 
-const {
-  createAsyncWorker: createSRTAsyncWorker,
-  getAsyncWorkerPath: getSRTAsyncWorkerPath
-} = require('./src/async-worker-provider');
+import {
+  createAsyncWorker as createSRTAsyncWorker,
+  getAsyncWorkerPath as getSRTAsyncWorkerPath,
+} from './src/async-worker-provider';
 
 const isSRTInstalled = () => {
   return !! SRT;

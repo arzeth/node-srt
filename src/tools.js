@@ -75,10 +75,10 @@ function generateRandomBytes(length) {
   return buf;
 }
 
-module.exports = {
+export {
   getChunksTotalByteLength,
   cloneChunks,
   copyChunksIntoBuffer,
   sliceBufferToChunks,
-  generateRandomBytes
+  generateRandomBytes,
 };

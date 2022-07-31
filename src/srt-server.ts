@@ -5,7 +5,9 @@ import { AsyncReaderWriter } from "./async-reader-writer";
 import { SRTEpollOpt, SRTResult, SRTSockStatus } from "./srt-api-enums";
 import { SRTSocketAsync } from "./srt-socket-async";
 
-const debug = require('debug')('srt-server');
+//const debug = require('debug')('srt-server');
+import { default as _debug } from "debug";
+const debug = _debug('srt-server');
 
 const DEBUG = false;
 
