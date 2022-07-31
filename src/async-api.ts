@@ -264,12 +264,18 @@ export class AsyncSRT {
       });
   }
 
-  setSockOpt(socket: number, option: SRTSockOpt, value: SRTSockOptValue, callback?: AsyncSRTCallback) {
-    return this._createAsyncWorkPromise("setSockOpt", [socket, option, value], callback);
+  setSockFlag(socket: number, option: SRTSockOpt, value: SRTSockOptValue, callback?: AsyncSRTCallback) {
+    return this._createAsyncWorkPromise("setSockFlag", [socket, option, value], callback);
+  }
+  setSockOpt(...args: Parametrs<AsyncSRT['setSockFlag']>) {
+    return this.setSockFlag(...args)
   }
 
-  getSockOpt(socket: number, option: SRTSockOpt, callback?: AsyncSRTCallback) {
-    return this._createAsyncWorkPromise("getSockOpt", [socket, option], callback);
+  getSockFlag(socket: number, option: SRTSockOpt, callback?: AsyncSRTCallback) {
+    return this._createAsyncWorkPromise("getSockFlag", [socket, option], callback);
+  }
+  getSockOpt(...args: Parametrs<AsyncSRT['getSockFlag']>) {
+    return this.getSockFlag(...args)
   }
 
   getSockState(socket: number, callback?: AsyncSRTCallback) {

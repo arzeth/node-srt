@@ -28,7 +28,7 @@ describe("SRT library", () => {
     expect(state).toEqual(SRT.SRTS_INIT);
   });
 
-  it("can set SRT sockopt SRTO_MSS", () => {
+  it("can set SRT sockflag SRTO_MSS", () => {
     const srt = new SRT();
     const socket = srt.createSocket();
     const result = srt.setSockFlag(socket, SRT.SRTO_MSS, 1052);
@@ -39,7 +39,7 @@ describe("SRT library", () => {
     expect(value).toEqual(1052);
   });
 
-  it("can set SRT sockopt SRTO_STREAMID", () => {
+  it("can set SRT sockflag SRTO_STREAMID", () => {
     const srt = new SRT();
     const socket = srt.createSocket();
     const result = srt.setSockFlag(socket, SRT.SRTO_STREAMID, "STREAMID");

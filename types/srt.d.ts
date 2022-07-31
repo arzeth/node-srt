@@ -73,6 +73,12 @@ export class SRT {
    * @param option
    * @param value
    */
+  setSockFlag(socket: number, option: SRTSockOpt, value: SRTSockOptValue): SRTResult
+
+  /**
+   *
+   * @deprecated Use setSockFlag
+   */
   setSockOpt(socket: number, option: SRTSockOpt, value: SRTSockOptValue): SRTResult
 
   /**
@@ -80,7 +86,14 @@ export class SRT {
    * @param socket
    * @param option
    */
+  getSockFlag(socket: number, option: SRTSockOpt): SRTSockOptValue
+
+  /**
+   *
+   * @deprecated Use getSockFlag
+   */
   getSockOpt(socket: number, option: SRTSockOpt): SRTSockOptValue
+
 
   /**
    *
