@@ -141,7 +141,14 @@ function buildWin32() {
 function buildNx() {
 
   console.log("Running ./configure");
-  const configure = spawnSync('./configure', [ '--prefix', buildDir ], { cwd: srtSourcePath, shell: true, stdio: 'inherit' } );
+  const configure = spawnSync(
+    './configure',
+    [
+      '--prefix', buildDir,
+      //'--enable-bonding',
+    ],
+    { cwd: srtSourcePath, shell: true, stdio: 'inherit' },
+  );
   if (configure.status) {
     process.exit(configure.status);
   }

@@ -55,11 +55,10 @@ export enum SRTSockOpt {
   SRTO_IPV6ONLY,            // IPV6_V6ONLY mode
   SRTO_PEERIDLETIMEO,       // Peer-idle timeout (max time of silence heard from peer) in [ms]
   SRTO_BINDTODEVICE,        // Forward the SOL_SOCKET/SO_BINDTODEVICE option on socket (pass packets only from that device)
-/*#if ENABLE_EXPERIMENTAL_BONDING
-  SRTO_GROUPCONNECT,        // Set on a listener to allow group connection
-  SRTO_GROUPSTABTIMEO,      // Stability timeout (backup groups) in [us]
-  SRTO_GROUPTYPE,           // Group type to which an accepted socket is about to be added, available in the handshake
-#endif*/
+  // see https://github.com/Haivision/srt/blob/master/docs/features/bonding-quick-start.md
+  //TODO: SRTO_GROUPCONNECT,        // Set on a listener to allow group connection (ENABLE_BONDING)
+  //TODO: SRTO_GROUPMINSTABLETIMEO, // Minimum Link Stability timeout (backup mode) in milliseconds (ENABLE_BONDING)
+  //TODO: SRTO_GROUPTYPE,           // Group type to which an accepted socket is about to be added, available in the handshake (ENABLE_BONDING)
   SRTO_PACKETFILTER = 60,   // Add and configure a packet filter
   SRTO_RETRANSMITALGO = 61,  // An option to select packet retransmission algorithm
 
