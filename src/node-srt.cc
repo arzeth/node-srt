@@ -12,10 +12,11 @@ using namespace std;
 
 #define EPOLL_EVENTS_NUM_MAX 1024
 
-Napi::FunctionReference NodeSRT::constructor;
+//Napi::FunctionReference NodeSRT::constructor;
 
 Napi::Object NodeSRT::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
+
 
   Napi::Function func = DefineClass(env, "SRT", {
     InstanceMethod("createSocket", &NodeSRT::CreateSocket),
@@ -26,10 +27,12 @@ Napi::Object NodeSRT::Init(Napi::Env env, Napi::Object exports) {
     InstanceMethod("close", &NodeSRT::Close),
     InstanceMethod("read", &NodeSRT::Read),
     InstanceMethod("write", &NodeSRT::Write),
+
     InstanceMethod("setSockFlag", &NodeSRT::SetSockFlag),
-    InstanceMethod("setSockOpt", &NodeSRT::SetSockFlag),
+    //InstanceMethod("setSockOpt", &NodeSRT::SetSockFlag),
     InstanceMethod("getSockFlag", &NodeSRT::GetSockFlag),
-    InstanceMethod("getSockOpt", &NodeSRT::GetSockFlag),
+    //InstanceMethod("getSockOpt", &NodeSRT::GetSockFlag),
+
     InstanceMethod("getSockState", &NodeSRT::GetSockState),
     InstanceMethod("epollCreate", &NodeSRT::EpollCreate),
     InstanceMethod("epollAddUsock", &NodeSRT::EpollAddUsock),
@@ -54,8 +57,10 @@ Napi::Object NodeSRT::Init(Napi::Env env, Napi::Object exports) {
     StaticValue("EPOLL_ET", Napi::Number::New(env, SRT_EPOLL_ET)),
   });
 
-  constructor = Napi::Persistent(func);
-  constructor.SuppressDestruct();
+  Napi::FunctionReference *constructor = new Napi::FunctionReference();
+  *constructor = Napi::Persistent(func);
+  constructor->SuppressDestruct();
+  env.SetInstanceData(constructor);
 
   exports.Set("SRT", func);
   return exports;
