@@ -1,6 +1,6 @@
 import { Worker } from 'worker_threads';
 import path from 'path';
-import __dirname from './__dirname';
+import __dirname from './__dirname.js';
 
 const ASYNC_WORKER_PATH = './async-worker.js';
 
