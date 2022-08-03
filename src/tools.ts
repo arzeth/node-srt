@@ -66,19 +66,6 @@ export function copyChunksIntoBuffer(chunks: Array<Uint8Array>, targetBuffer?: B
   return targetBuffer;
 }
 
-/**
- *
- * @param {number} length
- * @returns {Uint8Array}
- */
-export function generateRandomBytes(length: number) {
-  const buf = new Uint8Array(length);
-  for (let i = 0; i < buf.byteLength; i++) {
-    buf[i] = Math.round(0xFF * Math.random());
-  }
-  return buf;
-}
-
 // The following function is under MIT-0 (The MIT No Attribution License), author: Arzet Ro <arzeth0@gmail.com>
 export function isSafeFloat (n: any): boolean {
   return typeof n === 'number' && n >= Number.MIN_SAFE_INTEGER && n <= Number.MAX_SAFE_INTEGER
