@@ -1,4 +1,4 @@
-import {SRT, SRTReadReturn} from '../index';
+import {SRT, SRTReadReturn} from '../index.js';
 
 const srt = new SRT();
 const socket = srt.createSocket();

@@ -1,7 +1,7 @@
 import fs from "fs";
 import url from "url";
 import path from "path";
-import __dirname from './__dirname';
+import __dirname from './__dirname.js';
 
 
 // NOTE: Very useful in combination with PKG executable bundler,

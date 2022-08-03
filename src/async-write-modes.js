@@ -1,4 +1,4 @@
-import SRT from './srt';
+import SRT from './srt.js';
 
 /**
  * @module async-write-modes

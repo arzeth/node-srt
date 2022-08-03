@@ -1,9 +1,14 @@
 {
   "compilerOptions": {
     "allowJs": true,
-    "module": "es2022",
-    "moduleResolution": "node",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "outDir": "build",
+    "alwaysStrict": true,
+    "strict": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+
     "target": "ES2020",
     "typeRoots": ["./node_modules/@types"]
   },

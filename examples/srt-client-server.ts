@@ -1,8 +1,8 @@
 #!/usr/bin/env ts-node
 
-import { SRT, SRTClientConnection, SRTServer } from '../';
-import { SRTResult } from '../src/srt-api-enums';
-import { SRTServerConnection } from '../types/srt-server';
+import { SRT, SRTClientConnection, SRTServer } from '../index.js';
+import { SRTResult } from '../src/srt-api-enums.js';
+import { SRTServerConnection } from '../types/srt-server.js';
 
 new SRT().setLogLevel(7);
 

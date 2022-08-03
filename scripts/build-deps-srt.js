@@ -13,6 +13,7 @@ import vparse from 'vparse';
 import __dirname from '../src/__dirname.js';
 
 const env = process.env;
+const DEBUG = !!+env.DEBUG || process.argv.includes('--debug')
 
 const SRT_REPO = env.NODE_SRT_REPO || "https://github.com/Haivision/srt.git";
 //const SRT_CHECKOUT = "v1.5.0";

@@ -1,6 +1,6 @@
-import { AsyncReaderWriter } from "./async-reader-writer";
-import { SRTResult } from "./srt-api-enums";
-import { SRTSocketAsync } from "./srt-socket-async";
+import { AsyncReaderWriter } from "./async-reader-writer.js";
+import { SRTResult } from "./srt-api-enums.js";
+import { SRTSocketAsync } from "./srt-socket-async.js";
 
 export class SRTClientConnection extends SRTSocketAsync {
 
@@ -17,6 +17,9 @@ export class SRTClientConnection extends SRTSocketAsync {
    * for performing r/w ops on connections.
    */
   getReaderWriter(): AsyncReaderWriter {
+    if (null === this.socket || true === this._startedToDispose) {
+      throw new Error('SRTClientConnection:: getReaderWriter:: already started to dispose');
+    }
     return new AsyncReaderWriter(this.asyncSrt, this.socket);
   }
 
@@ -59,6 +62,9 @@ export class SRTClientConnection extends SRTSocketAsync {
    * Call `setSocketFlags` before calling this.
    */
   protected async _open(): Promise<SRTClientConnection> {
+    if (null === this.socket || true === this._startedToDispose) {
+      throw new Error('SRTClientConnection:: open:: already started to dispose');
+    }
     const result = await this.asyncSrt.connect(this.socket, this.address, this.port);
     if (result === SRTResult.SRT_ERROR) {
       throw new Error('SRT.connect() failed');

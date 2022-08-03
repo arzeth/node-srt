@@ -1,5 +1,5 @@
 import { Readable } from 'stream';
-import SRT from './srt';
+import SRT from './srt.js';
 //const debug = import('debug')('srt-read-stream');
 import { default as _debug } from "debug";
 const debug = _debug('srt-read-stream');

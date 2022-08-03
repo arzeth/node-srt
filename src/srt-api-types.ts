@@ -1,4 +1,4 @@
-import { SRTResult } from "./srt-api-enums";
+import { SRTResult } from "./srt-api-enums.js";
 
 export type SRTReadReturn = Uint8Array | null | SRTResult.SRT_ERROR;
 

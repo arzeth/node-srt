@@ -4,11 +4,12 @@ const debug = _debug('srt-async');
 
 import { performance as Perf } from "perf_hooks";
 
-import { SRTEpollResult, SRTFileDescriptor, SRTReadReturn, SRTSockOptValue, SRTStats } from "./srt-api-types";
-import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockStatus } from "./srt-api-enums";
+import { SRTEpollResult, SRTFileDescriptor, SRTReadReturn, SRTSockOptValue, SRTStats } from "./srt-api-types.js";
+import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockStatus } from "./srt-api-enums.js";
 
-import { traceCallToString, extractTransferListFromParams } from './async-helpers';
-import { createAsyncWorker } from './async-worker-provider';
+import { traceCallToString, extractTransferListFromParams } from './async-helpers.js';
+import { createAsyncWorker } from './async-worker-provider.js';
+import { waitForCondition, wait } from "./tools.js";
 
 const DEFAULT_PROMISE_TIMEOUT_MS = 3000;
 
@@ -46,7 +47,7 @@ export type AsyncSRTReturnValue =
 
 export type AsyncSRTPromise = Promise<AsyncSRTReturnValue>;
 
-export type AsyncSRTCallback = (ret: AsyncSRTReturnValue) => void;
+export type AsyncSRTCallback = (ret: AsyncSRTReturnValue) => any;
 
 export class AsyncSRT {
 
@@ -56,7 +57,7 @@ export class AsyncSRT {
    */
   static TimeoutMs = DEFAULT_PROMISE_TIMEOUT_MS;
 
-  private _worker: null|Worker;
+  private _worker: null|ReturnType<typeof createAsyncWorker>;// there are different `Worker`s: browser one and Node.js one
   private _workCbQueue: AsyncSRTCallback[] = [];
   private _error: null | Error = null;
   private _id: number = ++idGen;
@@ -71,7 +72,7 @@ export class AsyncSRT {
 
     // @ts-ignore
     this._worker = workerFactory();
-    (this._worker as any).on('message', this._onWorkerMessage.bind(this));
+    ;(this._worker as any).on('message', this._onWorkerMessage.bind(this));
   }
 
   get id(): number {
@@ -106,19 +107,42 @@ export class AsyncSRT {
     return !this._worker;
   }
 
+  private _startedToDispose: boolean = false;
+  public get startedToDispose () { return this._startedToDispose; }
+  private workerTerminatedWithErrorCode: number|undefined = void 0;
   /**
    * @returns {Promise<number>} Resolves to exit code of Worker (only NodeJS)
    * @see https://nodejs.org/docs/latest-v14.x/api/worker_threads.html#worker_threads_worker_terminate
    */
-  dispose(): Promise<number> {
+  async dispose(): Promise<number> {
+    if (this._startedToDispose) {
+      console.warn('async-api.ts:: dispose:: was already called');
+      return (
+        void 0 === this.workerTerminatedWithErrorCode
+        ? NaN
+        : this.workerTerminatedWithErrorCode
+      );
+    }
+    DEBUG && debug(this._id, 'dispose');
+    this._startedToDispose = true;
+    // the order is on purpose to avoid races
+    // because not sure whether {getting a property} & {comparing it with 0} is a single atomic operation.
+    if (0 < this._createAsyncWorkPromiseLockLevel)
+    {
+      await waitForCondition(() => {
+        console.log('_createAsyncWorkPromiseLockLevel = %O', this._createAsyncWorkPromiseLockLevel);
+        return this._createAsyncWorkPromiseLockLevel <= 0;
+      })
+    }
     const worker = this._worker;
     this._worker = null;
     if (this._workCbQueue.length !== 0) {
       DEBUG && console.warn(`AsyncSRT: flushing callback-queue with ${this._workCbQueue.length} remaining jobs awaiting.`);
       this._workCbQueue.length = 0;
     }
-    // NodeJS workers terminate method return such Promise, as opposed to Web spec.
-    return worker ? (worker.terminate() as unknown) as Promise<number> : Promise.resolve(0);
+    if (worker) DEBUG && debug(this._id, 'dispose:: terminating a Worker');
+    else DEBUG && console.warn(this._id, 'dispose:: no Worker found');
+    return this.workerTerminatedWithErrorCode = worker ? await worker.terminate() : 0;
   }
 
   private _onWorkerMessage(data: AsyncSRTWorkerMessage): void {
@@ -138,31 +162,38 @@ export class AsyncSRT {
       this._error = data.err;
     }
 
-    const {timestamp, result} = data;
-    callback(result);
+    if (callback)
+    {
+      const {timestamp, result} = data;
+      callback(result);
+    }
   }
 
-  private _postAsyncWork(method: string, args: any[], callback: AsyncSRTCallback) {
+  private _postAsyncWork(method: string, args: any[], callback: AsyncSRTCallback): void {
     // we check here again because this gets called from
     // a promise-executor (potentially in different tick than promise-creation).
-    if (this.isDisposed())
-      return Promise.reject(new Error("AsyncSRT._postAsyncWork: has already been dispose()'d"));
+    if (this.isDisposed()) {
+      const err = new Error("AsyncSRT._postAsyncWork: has already been dispose()'d");
+      throw err;
+      //return Promise.reject(err);
+    }
 
     const timestamp = Perf.now();
 
     DEBUG && debug(this._id, 'Posting call:', traceCallToString(method, args));
 
     const msgData: AsyncSRTWorkerPost = {method, args, /*workId,*/ timestamp};
-    const transferList: Transferable[] = extractTransferListFromParams(args);
+    const transferList = extractTransferListFromParams(args);
 
     this._workCbQueue.push(callback);
     this._worker?.postMessage(msgData, transferList);
   }
 
+  private _createAsyncWorkPromiseLockLevel: number = 0;
   private _createAsyncWorkPromise(method: string,
     args: any[] = [],
-    callback: AsyncSRTCallback = null,
-    useTimeout = false,
+    callback?: AsyncSRTCallback,
+    useTimeout: boolean = false,
     timeoutMs: number = AsyncSRT.TimeoutMs): AsyncSRTPromise {
 
     if (this.isDisposed()) {
@@ -170,8 +201,19 @@ export class AsyncSRT {
       console.error(err);
       return Promise.reject(err);
     }
+    if (this.startedToDispose)
+    {
+      DEBUG && console.warn(
+        '_createAsyncWorkPromise(%O, %O) was called; but startedToDispose=true',
+        method, args,
+      );
+      // @ts-ignore
+      return // fixme: or Promise.reject? or Promise.resolve(null)?
+    }
+    this._createAsyncWorkPromiseLockLevel++;
 
     if (args.some(v => v === undefined)) {
+      this._createAsyncWorkPromiseLockLevel--;
       throw new Error(`AsyncSRT: Undefined value in argument list: ${traceCallToString(method, args)}.
         Probably missing some non-optional parameters when method called.`);
     }
@@ -179,21 +221,38 @@ export class AsyncSRT {
     return new Promise((resolve, reject) => {
       let timeout: ReturnType<typeof setTimeout> | null = null;
       let rejected = false;
-      const onResult = (result) => {
+      const onResult = (
+        result: ReturnType<Parameters<AsyncSRT['_postAsyncWork']>[2]>
+      ) => {
         // Q: signal somehow to app that timed-out call has had result after all? (only in case of using Promise..?)
         if (rejected) {
           // The reject thing only makes sense for Promise,
           // and users can manage this aspect themselves when using plain callbacks.
-          callback?.(result);
+          try {
+            callback?.(result);
+          } catch (e)
+          {
+            console.error(e)
+          }
           return;
         } else if (useTimeout) clearTimeout(timeout!);
+
         resolve(result);
-        callback?.(result); // NOTE: the order doesn't matter for us,
-        //      but intuitively the promise result should probably be resolved first.
+        // NOTE: the order doesn't matter for us,
+        // but intuitively the promise result should probably be resolved first.
+        try {
+          callback?.(result);
+        } catch (e) {
+          console.error(e);
+        }
+        this._createAsyncWorkPromiseLockLevel--;
+        //if (this._createAsyncWorkPromiseLockLevel < 0) this._createAsyncWorkPromiseLockLevel = 0;
       };
       if (useTimeout) {
         timeout = setTimeout(() => {
           reject(new Error(`Timeout exceeded (${timeoutMs} ms) while awaiting method result: ${traceCallToString(method, args)}`));
+          this._createAsyncWorkPromiseLockLevel--;
+          //if (this._createAsyncWorkPromiseLockLevel < 0) this._createAsyncWorkPromiseLockLevel = 0;
           rejected = true;
         }, timeoutMs);
       }
@@ -204,8 +263,8 @@ export class AsyncSRT {
   /**
    * @param {boolean} sender default: false. only needed to specify if local/remote SRT ver < 1.3 or no other HSv5 support
    */
-  createSocket(sender = false, callback?: AsyncSRTCallback) {
-    return this._createAsyncWorkPromise("createSocket", [sender], callback);
+  createSocket(sender = false, callback?: AsyncSRTCallback): Promise<number> {
+    return this._createAsyncWorkPromise("createSocket", [sender], callback) as Promise<number>;
   }
 
   bind(socket: number, address: string, port: number, callback?: AsyncSRTCallback) {
@@ -220,7 +279,7 @@ export class AsyncSRT {
     return this._createAsyncWorkPromise("connect", [socket, host, port], callback);
   }
 
-  accept(socket: number, callback?: AsyncSRTCallback, useTimeout = false, timeoutMs = AsyncSRT.TimeoutMs) {
+  accept(socket: number, callback?: AsyncSRTCallback, useTimeout: boolean = false, timeoutMs = AsyncSRT.TimeoutMs) {
     return this._createAsyncWorkPromise("accept", [socket], callback, useTimeout, timeoutMs);
   }
 
@@ -255,20 +314,20 @@ export class AsyncSRT {
    *
    * @param {number} socket Socket identifier to write to
    * @param {Buffer | Uint8Array} chunk The underlying `buffer` (ArrayBufferLike) will get "neutered" by creating the async task. Pass in or use a copy respectively if concurrent data usage is intended.
+   * @return {number} `chunk.byteLength` calculated before sending any request
    */
-  write(socket: number, chunk: Buffer | Uint8Array, callback?: AsyncSRTCallback) {
+  async write(socket: number, chunk: Buffer | Uint8Array, callback?: AsyncSRTCallback): Promise<number> {
     const byteLength = chunk.byteLength;
     DEBUG && debug(`Writing ${byteLength} bytes to socket:`, socket);
-    return this._createAsyncWorkPromise("write", [socket, chunk], callback)
-      .then((result) => {
-        if (result !== SRTResult.SRT_ERROR) {
-          return byteLength;
-        }
-      });
+    const ret = await this._createAsyncWorkPromise("write", [socket, chunk], callback);
+    if (ret === SRTResult.SRT_ERROR) {
+      throw new Error('AsyncSRT:: write:: Got SRT_ERROR while trying to write');
+    }
+    return byteLength;
   }
 
   setSockFlag(socket: number, option: SRTSockOpt, value: SRTSockOptValue, callback?: AsyncSRTCallback) {
-    return this._createAsyncWorkPromise("setSockFlag", [socket, option, value], callback);
+    return this._createAsyncWorkPromise("setSockFlag", [socket, option, value], callback) as Promise<SRTResult>;
   }
   setSockOpt(...args: Parameters<AsyncSRT['setSockFlag']>) {
     return this.setSockFlag(...args)
@@ -278,27 +337,27 @@ export class AsyncSRT {
     return this._createAsyncWorkPromise("getSockFlag", [socket, option], callback);
   }
   getSockOpt(...args: Parameters<AsyncSRT['getSockFlag']>) {
-    return this.getSockFlag(...args)
+    return this.getSockFlag(...args);
   }
 
   getSockState(socket: number, callback?: AsyncSRTCallback) {
-    return this._createAsyncWorkPromise("getSockState", [socket], callback);
+    return this._createAsyncWorkPromise("getSockState", [socket], callback) as Promise<SRTSockStatus>;
   }
 
   epollCreate(callback?: AsyncSRTCallback) {
-    return this._createAsyncWorkPromise("epollCreate", [], callback);
+    return this._createAsyncWorkPromise("epollCreate", [], callback) as Promise<SRTResult>;
   }
 
   epollAddUsock(epid: number, socket: number, events: number, callback?: AsyncSRTCallback) {
-    return this._createAsyncWorkPromise("epollAddUsock", [epid, socket, events], callback);
+    return this._createAsyncWorkPromise("epollAddUsock", [epid, socket, events], callback) as Promise<SRTResult>;
   }
 
   epollUWait(epid: number, msTimeOut: number, callback?: AsyncSRTCallback) {
-    return this._createAsyncWorkPromise("epollUWait", [epid, msTimeOut], callback);
+    return this._createAsyncWorkPromise("epollUWait", [epid, msTimeOut], callback) as Promise<SRTEpollResult[]>;
   }
 
   setLogLevel(logLevel: number | SRTLoggingLevel, callback?: AsyncSRTCallback) {
-    return this._createAsyncWorkPromise("setLogLevel", [logLevel], callback);
+    return this._createAsyncWorkPromise("setLogLevel", [logLevel], callback) as Promise<SRTResult>;
   }
 
   /**

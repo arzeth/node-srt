@@ -147,15 +147,17 @@ export default {
 
   // The glob patterns Jest uses to detect test files
   testMatch: [
+    //"/**/async_srt_client_server_test.js"
+
     "/build/**/*_spec.js",
     "/**/*_spec.js",
     "/build/**/*_test.js",
     "/**/*_test.js",
 
-    "/build/**/*_spec.mjs",
-    "/**/*_spec.mjs",
-    "/build/**/*_test.mjs",
-    "/**/*_test.mjs",
+    //"/build/**/*_spec.mjs",
+    //"/**/*_spec.mjs",
+    //"/build/**/*_test.mjs",
+    //"/**/*_test.mjs",
   ],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped

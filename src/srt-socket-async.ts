@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
-import { SRTSockOptValue } from "./srt-api-types";
-import { AsyncSRT } from "./async-api";
-import { SRTSockOpt, SRTResult } from "./srt-api-enums";
+import { SRTSockOptValue } from "./srt-api-types.js";
+import { AsyncSRT } from "./async-api.js";
+import { SRTSockOpt, SRTResult } from "./srt-api-enums.js";
 
 /**
  * An abstraction of SRT socket ownership concerns.
@@ -39,11 +39,18 @@ export abstract class SRTSocketAsync extends EventEmitter {
     if (this.socket !== null) {
       throw new Error('Can not call createSocket() twice, with socket already existing');
     }
+    if (true === this._startedToDispose) {
+      console.error('SRTSocketAsync:: create():: already started to dispose; returning null');
+      // @ts-ignore
+      return null
+    }
     this._socket = await this.asyncSrt.createSocket() as number;
     this.emit('created');
     return this;
   }
 
+  protected _startedToDispose: boolean = false;
+  public get startedToDispose () { return this._startedToDispose; }
   /**
    * Closes the socket and disposes of the internal async handle (in this order).
    *
@@ -61,6 +68,10 @@ export abstract class SRTSocketAsync extends EventEmitter {
    *
    */
   async dispose(): Promise<void> {
+    if (true === this._startedToDispose) {
+      return;
+    }
+    this._startedToDispose = true;
     if (this.socket !== null) {
       await this.asyncSrt.close(this.socket);
       await this.asyncSrt.dispose();
@@ -76,9 +87,16 @@ export abstract class SRTSocketAsync extends EventEmitter {
     }
     if (opts.length !== values.length)
       throw new Error('opts and values must have same length');
+    if (true === this._startedToDispose) {
+      console.error('SRTSocketAsync:: setSocketFlags:: already started to dispose; returning []');
+      return [];
+    }
     const promises = opts.map((opt, index) => {
-      return this.asyncSrt.setSockFlag(this.socket, opt, values[index]);
-    }) as Promise<SRTResult>[];
+      if (null !== this.socket && false === this._startedToDispose) { // check again in case of race
+        return this.asyncSrt.setSockFlag(this.socket!, opt, values[index]) as Promise<SRTResult>;
+      }
+      return;
+    }).filter(x=>x).map(x=>x as Promise<SRTResult>); // Fix TypeScript
     return Promise.all(promises);
   }
 
@@ -92,6 +110,11 @@ export abstract class SRTSocketAsync extends EventEmitter {
   open(): Promise<SRTSocketAsync> {
     if (this.socket === null) {
       throw new Error('No socket created, did you call create() before?');
+    }
+    if (true === this._startedToDispose) {
+      console.error('SRTSocketAsync:: open():: already started to dispose; returning null');
+      // @ts-ignore
+      return null
     }
     return this._open();
   }

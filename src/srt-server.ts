@@ -1,9 +1,9 @@
 import { EventEmitter } from "events";
-import { SRTEpollResult, SRTReadReturn } from "./srt-api-types";
-import { AsyncSRT } from "./async-api";
-import { AsyncReaderWriter } from "./async-reader-writer";
-import { SRTEpollOpt, SRTResult, SRTSockStatus } from "./srt-api-enums";
-import { SRTSocketAsync } from "./srt-socket-async";
+import { SRTEpollResult, SRTReadReturn } from "./srt-api-types.js";
+import { AsyncSRT } from "./async-api.js";
+import { AsyncReaderWriter } from "./async-reader-writer.js";
+import { SRTEpollOpt, SRTResult, SRTSockStatus } from "./srt-api-enums.js";
+import { SRTSocketAsync } from "./srt-socket-async.js";
 
 //const debug = require('debug')('srt-server');
 import { default as _debug } from "debug";
@@ -26,7 +26,8 @@ export class SRTServerConnection extends EventEmitter {
 
   private _gotFirstData = false;
 
-  constructor(private _asyncSrt: AsyncSRT, private _fd: number) {
+  private _asyncSrt: null|AsyncSRT = null;
+  constructor(_asyncSrt: AsyncSRT, private _fd: number) {
     super();
   }
 
@@ -51,6 +52,9 @@ export class SRTServerConnection extends EventEmitter {
    * @returns {AsyncReaderWriter}
    */
   getReaderWriter() {
+    if (null === this._asyncSrt) {
+      throw new Error('SRTServerConnection:: getReaderWriter:: Connection already closed');
+    }
     return new AsyncReaderWriter(this._asyncSrt, this.fd);
   }
 
@@ -61,6 +65,9 @@ export class SRTServerConnection extends EventEmitter {
    * @returns {Promise<SRTReadReturn>}
    */
   async read(bytes: number): Promise<SRTReadReturn> {
+    if (null === this._asyncSrt) {
+      throw new Error('SRTServerConnection:: read:: Connection already closed');
+    }
     return await this._asyncSrt.read(this.fd, bytes);
   }
 
@@ -87,6 +94,9 @@ export class SRTServerConnection extends EventEmitter {
    * @param {Buffer | Uint8Array} chunk
    */
   async write(chunk: Buffer|Uint8Array) {
+    if (null === this._asyncSrt) {
+      throw new Error('SRTServerConnection:: write:: Connection already closed');
+    }
     return await this._asyncSrt.write(this.fd, chunk);
   }
 
@@ -111,7 +121,7 @@ export class SRTServerConnection extends EventEmitter {
    */
   async close(): Promise<SRTResult | null> {
     if (this.isClosed()) return null;
-    const asyncSrt = this._asyncSrt;
+    const asyncSrt = this._asyncSrt!;
     this._asyncSrt = null;
     this.emit('closing');
     const result = await (asyncSrt.close(this.fd) as Promise<SRTResult | null>);
@@ -121,7 +131,7 @@ export class SRTServerConnection extends EventEmitter {
   }
 
   isClosed() {
-    return ! this._asyncSrt;
+    return null === this._asyncSrt;
   }
 
   onData() {
@@ -219,7 +229,7 @@ export class SRTServer extends SRTSocketAsync {
     if (result === SRTResult.SRT_ERROR) {
       throw new Error('SRT.epollCreate() failed');
     }
-    this._epid = result!;
+    this._epid = result;
 
     this.emit('opened');
 
@@ -283,7 +293,7 @@ export class SRTServer extends SRTSocketAsync {
    */
   private async _pollEvents() {
     // needed for async-disposal, guard from AsyncSRT instance wiped
-    if (!this.asyncSrt || !this._epid) {
+    if (!this.asyncSrt || 0 === this._epid || true === this.asyncSrt?.startedToDispose) {
       this._clearTimers();
       return;
     }

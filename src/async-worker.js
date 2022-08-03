@@ -7,9 +7,9 @@ import { default as _debug } from "debug";
 const debug = _debug('srt-async-worker');
 //const debug = (await import('debug'))('srt-async-worker');
 
-import SRT from './srt';
+import SRT from './srt.js';
 
-import { argsToString, traceCallToString, extractTransferListFromParams } from './async-helpers';
+import { argsToString, traceCallToString, extractTransferListFromParams } from './async-helpers.js';
 
 const DEBUG = false;
 const DRY_RUN = false;

@@ -1,7 +1,7 @@
-import { AsyncSRT } from "./async-api";
-import { readChunks, READ_BUF_SIZE } from "./async-read-modes";
-import { writeChunksWithYieldingLoop } from "./async-write-modes";
-import { sliceBufferToChunks } from "./tools";
+import { AsyncSRT } from "./async-api.js";
+import { readChunks, READ_BUF_SIZE } from "./async-read-modes.js";
+import { writeChunksWithYieldingLoop } from "./async-write-modes.js";
+import { sliceBufferToChunks } from "./tools.js";
 
 export const DEFAULT_MTU_SIZE = 1316; // (for writes) should be the maximum on all IP networks cases
 export const DEFAULT_WRITES_PER_TICK = 128; // tbi

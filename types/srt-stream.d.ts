@@ -2,8 +2,8 @@
 
 import { Writable, Readable } from "stream";
 
-import { SRTFileDescriptor } from "../src/srt-api-types";
-import { SRT } from "./srt";
+import { SRTFileDescriptor } from "../src/srt-api-types.js";
+import { SRT } from "./srt.js";
 
 interface SRTConnectionState {
   readonly srt: SRT;

@@ -1,5 +1,5 @@
-import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockStatus } from "../src/srt-api-enums";
-import { SRTFileDescriptor, SRTReadReturn, SRTSockOptValue, SRTEpollResult, SRTStats } from "../src/srt-api-types";
+import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockStatus } from "../src/srt-api-enums.js";
+import { SRTFileDescriptor, SRTReadReturn, SRTSockOptValue, SRTEpollResult, SRTStats } from "../src/srt-api-types.js";
 
 export class SRT {
 

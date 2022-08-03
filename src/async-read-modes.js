@@ -1,4 +1,4 @@
-import SRT from './srt';
+import SRT from './srt.js';
 
 const READ_BUF_SIZE = 16 * 1024;
 

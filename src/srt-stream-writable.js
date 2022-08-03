@@ -1,5 +1,5 @@
 import { Writable } from 'stream';
-import SRT from './srt';
+import SRT from './srt.js';
 import { default as _debug } from "debug";
 const debug = _debug('srt-write-stream');
 
