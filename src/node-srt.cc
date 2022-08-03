@@ -301,13 +301,12 @@ Napi::Value NodeSRT::GetSockFlag(const Napi::CallbackInfo& info) {
   int32_t optName = option;
   int result = SRT_ERROR;
 
+  // Each group of `case`s in this `switch` is sorted by alphabet.
   switch((SRT_SOCKOPT)optName) {
     case SRTO_CONNTIMEO:
     case SRTO_EVENT:
     case SRTO_FC:
-    //case SRTO_GROUPCONNECT:
-    //case SRTO_GROUPSTABTIMEO:
-    //case SRTO_GROUPTYPE:
+    //case SRTO_GROUPTYPE: // TODO
     case SRTO_IPTOS:
     case SRTO_IPTTL:
     case SRTO_IPV6ONLY:
@@ -337,7 +336,6 @@ Napi::Value NodeSRT::GetSockFlag(const Napi::CallbackInfo& info) {
     case SRTO_SNDKMSTATE:
     case SRTO_SNDTIMEO:
     case SRTO_STATE:
-    //case SRTO_TRANSTYPE:
     case SRTO_UDP_RCVBUF:
     case SRTO_UDP_SNDBUF:
     case SRTO_VERSION:
@@ -379,7 +377,6 @@ Napi::Value NodeSRT::GetSockFlag(const Napi::CallbackInfo& info) {
     case SRTO_BINDTODEVICE:
     case SRTO_CONGESTION:
     case SRTO_PACKETFILTER:
-    //case SRTO_PASSPHRASE:
     case SRTO_STREAMID:
     {
       char optValue[512];
@@ -388,6 +385,12 @@ Napi::Value NodeSRT::GetSockFlag(const Napi::CallbackInfo& info) {
       returnVal = Napi::Value::From(env, std::string(optValue));
       break;
     }
+    case SRTO_GROUPCONNECT:
+    case SRTO_GROUPMINSTABLETIMEO:
+    case SRTO_PASSPHRASE:
+    case SRTO_TRANSTYPE:
+      Napi::Error::New(env, "getSockFlag was called on a write-only option.").ThrowAsJavaScriptException();
+      break;
     default:
       Napi::Error::New(env, "SOCKOPT not implemented yet").ThrowAsJavaScriptException();
       break;
