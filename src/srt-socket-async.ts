@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import { SRTSockOptValue } from "./srt-api-types.js";
 import { AsyncSRT } from "./async-api.js";
-import { SRTSockOpt, SRTResult } from "./srt-api-enums.js";
+import { SRTSockOpt, SRTResult, SRTSockOptDetalizedW } from "./srt-api-enums.js";
 
 /**
  * An abstraction of SRT socket ownership concerns.
@@ -81,7 +81,8 @@ export abstract class SRTSocketAsync extends EventEmitter {
     this.removeAllListeners();
   }
 
-  async setSocketFlags(opts: SRTSockOpt[], values: SRTSockOptValue[]): Promise<SRTResult[]> {
+  // fixme: values are not checked by TypeScript
+  async setSocketFlags(opts: SRTSockOptDetalizedW['opt'][], values: SRTSockOptValue[]): Promise<SRTResult[]> {
     if (this.socket === null) {
       throw new Error('There is no socket, call create() first');
     }
@@ -93,7 +94,12 @@ export abstract class SRTSocketAsync extends EventEmitter {
     }
     const promises = opts.map((opt, index) => {
       if (null !== this.socket && false === this._startedToDispose) { // check again in case of race
-        return this.asyncSrt.setSockFlag(this.socket!, opt, values[index]) as Promise<SRTResult>;
+        return this.asyncSrt.setSockFlag(
+          this.socket!,
+          // @ts-ignore: see the fixme above
+          opt,
+          values[index]
+        ) as Promise<SRTResult>;
       }
       return;
     }).filter(x=>x).map(x=>x as Promise<SRTResult>); // Fix TypeScript

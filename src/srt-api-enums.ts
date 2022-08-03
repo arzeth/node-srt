@@ -1,3 +1,5 @@
+import { StrictExtract, } from 'ts-essentials'
+
 export enum SRTSockOpt {
   SRTO_MSS = 0,             // the Maximum Transfer Unit
   SRTO_SNDSYN = 1,          // if sending is blocking
@@ -64,7 +66,76 @@ export enum SRTSockOpt {
 
   SRTO_E_SIZE // Always last element, not a valid option.
 }
-
+// from https://github.com/Haivision/srt/blob/master/docs/API/API-socket-options.md#list-of-options
+export const SRTSockOptsDetalized = [
+  {opt: SRTSockOpt.SRTO_BINDTODEVICE,        restrict: 'pre-bind', type: 'string',  units: '',        default: '',         range: '',         dir: 'RW', entity: 'GSD+'},
+  {opt: SRTSockOpt.SRTO_CONGESTION,          restrict: 'pre',      type: 'string',  units: '',        default: 'live',     range: '\*',       dir: 'W',  entity: 'S'},
+  {opt: SRTSockOpt.SRTO_CONNTIMEO,           restrict: 'pre',      type: 'int32_t', units: 'ms',      default: 3000,       range: '0..',      dir: 'W',  entity: 'GSD+'},
+  {opt: SRTSockOpt.SRTO_DRIFTTRACER,         restrict: 'post',     type: 'bool',    units: '',        default: true,       range: '',         dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_ENFORCEDENCRYPTION,  restrict: 'pre',      type: 'bool',    units: '',        default: true,       range: '',         dir: 'W',  entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_EVENT,               restrict: '',         type: 'int32_t', units: 'flags',   default: '',         range: '',         dir: 'R',  entity: 'S'},
+  {opt: SRTSockOpt.SRTO_FC,                  restrict: 'pre',      type: 'int32_t', units: 'pkts',    default: 25600,      range: '32..',     dir: 'RW', entity: 'GSD'},
+  //TODO: {opt: SRTSockOpt.SRTO_GROUPCONNECT,        restrict: 'pre',      type: 'int32_t', units: '',        default: 0,          range: '0...1',    dir: 'W',  entity: 'S'},
+  //TODO: {opt: SRTSockOpt.SRTO_GROUPMINSTABLETIMEO, restrict: 'pre',      type: 'int32_t', units: 'ms',      default: 60,         range: '60-...',   dir: 'W',  entity: 'GDI+'},
+  //TODO: {opt: SRTSockOpt.SRTO_GROUPTYPE,           restrict: '',         type: 'int32_t', units: 'enum',    default: '',         range: '',         dir: 'R',  entity: 'S'},
+  {opt: SRTSockOpt.SRTO_INPUTBW,             restrict: 'post',     type: 'int64_t', units: 'B/s',     default: 0,          range: '0..',      dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_IPTOS,               restrict: 'pre-bind', type: 'int32_t', units: '',        default: '(system)', range: '0..255',   dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_IPTTL,               restrict: 'pre-bind', type: 'int32_t', units: 'hops',    default: '(system)', range: '1..255',   dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_IPV6ONLY,            restrict: 'pre-bind', type: 'int32_t', units: '',        default: '(system)', range: '-1..1',    dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_ISN,                 restrict: '',         type: 'int32_t', units: '',        default: '',         range: '',         dir: 'R',  entity: 'S'},
+  {opt: SRTSockOpt.SRTO_KMPREANNOUNCE,       restrict: 'pre',      type: 'int32_t', units: 'pkts',    default: '2**12',    range: '0.. \*',   dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_KMREFRESHRATE,       restrict: 'pre',      type: 'int32_t', units: 'pkts',    default: '2**24',    range: '0..',      dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_KMSTATE,             restrict: '',         type: 'int32_t', units: 'enum',    default: '',         range: '',         dir: 'R',  entity: 'S'},
+  {opt: SRTSockOpt.SRTO_LATENCY,             restrict: 'pre',      type: 'int32_t', units: 'ms',      default: '120 \*',   range: '0..',      dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_LINGER,              restrict: 'post',     type: 'linger',  units: 's',       default: 'off \*',   range: '0..',      dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_LOSSMAXTTL,          restrict: 'post',     type: 'int32_t', units: 'packets', default: 0,          range: '0..',      dir: 'RW', entity: 'GSD+'},
+  {opt: SRTSockOpt.SRTO_MAXBW,               restrict: 'post',     type: 'int64_t', units: 'B/s',     default: -1,         range: '-1..',     dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_MESSAGEAPI,          restrict: 'pre',      type: 'bool',    units: '',        default: true,       range: '',         dir: 'W',  entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_MININPUTBW,          restrict: 'post',     type: 'int64_t', units: 'B/s',     default: 0,          range: '0..',      dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_MINVERSION,          restrict: 'pre',      type: 'int32_t', units: 'version', default: 0x010000,   range: '\*',       dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_MSS,                 restrict: 'pre-bind', type: 'int32_t', units: 'bytes',   default: 1500,       range: '76..',     dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_NAKREPORT,           restrict: 'pre',      type: 'bool',    units: '',        default: ' \*',      range: '',         dir: 'RW', entity: 'GSD+'},
+  {opt: SRTSockOpt.SRTO_OHEADBW,             restrict: 'post',     type: 'int32_t', units: '%',       default: 25,         range: '5..100',   dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_PACKETFILTER,        restrict: 'pre',      type: 'string',  units: '',        default: "",         range: '[512]',    dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_PASSPHRASE,          restrict: 'pre',      type: 'string',  units: '',        default: "",         range: '[10..79]', dir: 'W',  entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_PAYLOADSIZE,         restrict: 'pre',      type: 'int32_t', units: 'bytes',   default: '\*',       range: '0.. \*',   dir: 'W',  entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_PBKEYLEN,            restrict: 'pre',      type: 'int32_t', units: 'bytes',   default: 0,          range: '\*',       dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_PEERIDLETIMEO,       restrict: 'pre',      type: 'int32_t', units: 'ms',      default: 5000,       range: '0..',      dir: 'RW', entity: 'GSD+'},
+  {opt: SRTSockOpt.SRTO_PEERLATENCY,         restrict: 'pre',      type: 'int32_t', units: 'ms',      default: 0,          range: '0..',      dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_PEERVERSION,         restrict: '',         type: 'int32_t', units: '*',       default: '',         range: '',         dir: 'R',  entity: 'GS'},
+  {opt: SRTSockOpt.SRTO_RCVBUF,              restrict: 'pre-bind', type: 'int32_t', units: 'bytes',   default: 8192,       range: '\*',       dir: 'RW', entity: 'GSD+'},
+  {opt: SRTSockOpt.SRTO_RCVDATA,             restrict: '',         type: 'int32_t', units: 'pkts',    default: '',         range: '',         dir: 'R',  entity: 'S'},
+  {opt: SRTSockOpt.SRTO_RCVKMSTATE,          restrict: '',         type: 'int32_t', units: 'enum',    default: '',         range: '',         dir: 'R',  entity: 'S'},
+  {opt: SRTSockOpt.SRTO_RCVLATENCY,          restrict: 'pre',      type: 'int32_t', units: 'msec',    default: '\*',       range: '0..',      dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_RCVSYN,              restrict: 'post',     type: 'bool',    units: '',        default: true,       range: '',         dir: 'RW', entity: 'GSI'},
+  {opt: SRTSockOpt.SRTO_RCVTIMEO,            restrict: 'post',     type: 'int32_t', units: 'ms',      default: -1,         range: '-1, 0..',  dir: 'RW', entity: 'GSI'},
+  {opt: SRTSockOpt.SRTO_RENDEZVOUS,          restrict: 'pre',      type: 'bool',    units: '',        default: false,      range: '',         dir: 'RW', entity: 'S'},
+  {opt: SRTSockOpt.SRTO_RETRANSMITALGO,      restrict: 'pre',      type: 'int32_t', units: '',        default: 1,          range: '[0, 1]',   dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_REUSEADDR,           restrict: 'pre-bind', type: 'bool',    units: '',        default: true,       range: '',         dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_SENDER,              restrict: 'pre',      type: 'bool',    units: '',        default: false,      range: '',         dir: 'W',  entity: 'S'},
+  {opt: SRTSockOpt.SRTO_SNDBUF,              restrict: 'pre-bind', type: 'int32_t', units: 'bytes',   default: 8192,       range: '\*',       dir: 'RW', entity: 'GSD+'},
+  {opt: SRTSockOpt.SRTO_SNDDATA,             restrict: '',         type: 'int32_t', units: 'pkts',    default: '',         range: '',         dir: 'R',  entity: 'S'},
+  {opt: SRTSockOpt.SRTO_SNDDROPDELAY,        restrict: 'post',     type: 'int32_t', units: 'ms',      default: '\*',       range: '-1..',     dir: 'W',  entity: 'GSD+'},
+  {opt: SRTSockOpt.SRTO_SNDKMSTATE,          restrict: '',         type: 'int32_t', units: 'enum',    default: '',         range: '',         dir: 'R',  entity: 'S'},
+  {opt: SRTSockOpt.SRTO_SNDSYN,              restrict: 'post',     type: 'bool',    units: '',        default: true,       range: '',         dir: 'RW', entity: 'GSI'},
+  {opt: SRTSockOpt.SRTO_SNDTIMEO,            restrict: 'post',     type: 'int32_t', units: 'ms',      default: -1,         range: '-1..',     dir: 'RW', entity: 'GSI'},
+  {opt: SRTSockOpt.SRTO_STATE,               restrict: '',         type: 'int32_t', units: 'enum',    default: '',         range: '',         dir: 'R',  entity: 'S'},
+  {opt: SRTSockOpt.SRTO_STREAMID,            restrict: 'pre',      type: 'string',  units: '',        default: "",         range: '[512]',    dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_TLPKTDROP,           restrict: 'pre',      type: 'bool',    units: '',        default: '\*',       range: '',         dir: 'RW', entity: 'GSD'},
+  {opt: SRTSockOpt.SRTO_TRANSTYPE,           restrict: 'pre',      type: 'int32_t', units: 'enum',    default: 'TT_LIVE',  range: '\*',       dir: 'W',  entity: 'S'},
+  {opt: SRTSockOpt.SRTO_TSBPDMODE,           restrict: 'pre',      type: 'bool',    units: '',        default: '\*',       range: '',         dir: 'W',  entity: 'S'},
+  {opt: SRTSockOpt.SRTO_UDP_RCVBUF,          restrict: 'pre-bind', type: 'int32_t', units: 'bytes',   default: 8192,       range: '\*',       dir: 'RW', entity: 'GSD+'},
+  {opt: SRTSockOpt.SRTO_UDP_SNDBUF,          restrict: 'pre-bind', type: 'int32_t', units: 'bytes',   default: 65536,      range: '\*',       dir: 'RW', entity: 'GSD+'},
+  {opt: SRTSockOpt.SRTO_VERSION,             restrict: '',         type: 'int32_t', units: '',        default: '',         range: '',         dir: 'R',  entity: 'S'},
+] as const
+export type SRTSockOptDetalizedR        = StrictExtract<typeof SRTSockOptsDetalized[number], {dir: 'R'}|{dir: 'RW'}>
+export type SRTSockOptDetalizedRNumber  = StrictExtract<SRTSockOptDetalizedR, {type: 'int32_t'}|{type: 'int64_t'}>
+export type SRTSockOptDetalizedRBoolean = StrictExtract<SRTSockOptDetalizedR, {type: 'bool'}>
+export type SRTSockOptDetalizedRString  = StrictExtract<SRTSockOptDetalizedR, {type: 'string'}>
+export type SRTSockOptDetalizedW        = StrictExtract<typeof SRTSockOptsDetalized[number], {dir: 'W'}|{dir: 'RW'}>
+export type SRTSockOptDetalizedWNumber  = StrictExtract<SRTSockOptDetalizedW, {type: 'int32_t'}|{type: 'int64_t'}>
+export type SRTSockOptDetalizedWBoolean = StrictExtract<SRTSockOptDetalizedW, {type: 'bool'}>
+export type SRTSockOptDetalizedWString  = StrictExtract<SRTSockOptDetalizedW, {type: 'string'}>
 export enum SRTEpollOpt
 {
    SRT_EPOLL_OPT_NONE = 0x0, // fallback

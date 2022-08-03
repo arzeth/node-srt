@@ -5,7 +5,7 @@ const debug = _debug('srt-async');
 import { performance as Perf } from "perf_hooks";
 
 import { SRTEpollResult, SRTFileDescriptor, SRTReadReturn, SRTSockOptValue, SRTStats } from "./srt-api-types.js";
-import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockStatus } from "./srt-api-enums.js";
+import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockOptDetalizedR, SRTSockOptDetalizedRBoolean, SRTSockOptDetalizedRNumber, SRTSockOptDetalizedRString, SRTSockOptDetalizedW, SRTSockOptDetalizedWBoolean, SRTSockOptDetalizedWNumber, SRTSockOptDetalizedWString, SRTSockStatus } from "./srt-api-enums.js";
 
 import { traceCallToString, extractTransferListFromParams } from './async-helpers.js';
 import { createAsyncWorker } from './async-worker-provider.js';
@@ -326,14 +326,46 @@ export class AsyncSRT {
     return byteLength;
   }
 
-  setSockFlag(socket: number, option: SRTSockOpt, value: SRTSockOptValue, callback?: AsyncSRTCallback) {
+  setSockFlag (socket: number, option: SRTSockOptDetalizedWNumber['opt'],  value: number,   callback?: AsyncSRTCallback):  Promise<SRTResult>;
+  setSockFlag (socket: number, option: SRTSockOptDetalizedWString['opt'],  value: string,   callback?: AsyncSRTCallback):  Promise<SRTResult>;
+  setSockFlag (socket: number, option: SRTSockOptDetalizedWBoolean['opt'], value: boolean,  callback?: AsyncSRTCallback):  Promise<SRTResult>;
+  setSockFlag (socket: number, option: SRTSockOptDetalizedW['opt'], value: SRTSockOptValue, callback?: AsyncSRTCallback): Promise<SRTResult> {
+    if (option === SRTSockOpt.SRTO_PASSPHRASE) {
+      if (!(
+        typeof value === 'string'
+        &&
+        (
+          value === ''
+          ||
+          (value.length >= 10 && value.length <= 79)
+        )
+      )) {
+        throw new Error(
+          'AsyncSRT:: setSockFlag(option=SRTSockOpt.SRTO_PASSPHRASE, value=`' + value + '`):: \
+Invalid value, \
+it should be a \
+string of length 0 (to disable encryption) \
+or \
+a string of length [10..79]'
+        );
+      }
+    }
     return this._createAsyncWorkPromise("setSockFlag", [socket, option, value], callback) as Promise<SRTResult>;
   }
   setSockOpt(...args: Parameters<AsyncSRT['setSockFlag']>) {
     return this.setSockFlag(...args)
   }
 
-  getSockFlag(socket: number, option: SRTSockOpt, callback?: AsyncSRTCallback) {
+  // those which have R in https://github.com/Haivision/srt/blob/master/docs/API/API-socket-options.md#list-of-options?
+  getSockFlag (socket: number, option: SRTSockOptDetalizedRNumber['opt'],    callback?: AsyncSRTCallback): Promise<SRTResult|number>;
+  getSockFlag (socket: number, option: SRTSockOptDetalizedRString['opt'],    callback?: AsyncSRTCallback): Promise<SRTResult|string>;
+  getSockFlag (socket: number, option: SRTSockOptDetalizedRBoolean['opt'],   callback?: AsyncSRTCallback): Promise<SRTResult|boolean>;
+  // those which don't have R but still work in https://github.com/Haivision/srt/blob/master/docs/API/API-socket-options.md#list-of-options?
+  getSockFlag (
+    socket: number,
+    option: SRTSockOptDetalizedR['opt'],
+    callback?: AsyncSRTCallback,
+  ) {
     return this._createAsyncWorkPromise("getSockFlag", [socket, option], callback);
   }
   getSockOpt(...args: Parameters<AsyncSRT['getSockFlag']>) {
