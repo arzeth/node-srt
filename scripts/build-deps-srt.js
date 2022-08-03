@@ -6,7 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import process from 'process';
 import clone from 'git-clone';
-import del from 'del';
+import { deleteSync } from 'del';
 import { spawnSync } from 'child_process';
 import os from 'os';
 import vparse from 'vparse';
@@ -17,9 +17,9 @@ const DEBUG = !!+env.DEBUG || process.argv.includes('--debug')
 
 const SRT_REPO = env.NODE_SRT_REPO || "https://github.com/Haivision/srt.git";
 //const SRT_CHECKOUT = "v1.5.0";
-const SRT_CHECKOUT = "618db39c320e5cad88b40b85097fc0eb67cb46c7";
-// ^ 2022-07-25
-// https://github.com/Haivision/srt/commit/618db39c320e5cad88b40b85097fc0eb67cb46c7
+const SRT_CHECKOUT = "e48f43d546457f3386702d032d7d7e08cd0a5b19"
+// ^ 2022-08-03
+// https://github.com/Haivision/srt/commit/e48f43d546457f3386702d032d7d7e08cd0a5b19
 
 // Need to patch up env in macOS 10.15+ (Catalina and further)
 // in order to link user-installed OpenSSL,
@@ -52,7 +52,7 @@ if (!fs.existsSync(srtSourcePath)) {
 
     if (err) {
       console.error(err.message);
-      if (fs.existsSync(srtSourcePath)) del.sync(srtSourcePath);
+      if (fs.existsSync(srtSourcePath)) deleteSync(srtSourcePath);
       process.exit(1);
     }
 
