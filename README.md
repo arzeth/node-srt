@@ -1,17 +1,17 @@
 <h1 align="center">
   <img height="100px" src="https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg" />&nbsp;&nbsp;&nbsp;&nbsp;
-  <img alt="SRT" src="http://www.srtalliance.org/wp-content/uploads/SRT_text_hor_logo_grey.png" width="300"/>
+  <img alt="SRT" src="https://www.srtalliance.org/wp-content/uploads/SRT_text_hor_logo_grey.png" width="300"/>
 </h1>
 
 `@eyevinn/srt` is a Node.js Native Addon that provides bindings to [Secure Reliable Transport SDK](https://github.com/Haivision/srt).
 
 ## Install
 
-```
+```bash
 npm install --save @eyevinn/srt
 ```
 
-Installing from NPM downloads and builds SRT SDK and NodeJS addon for your operating system × architecture.
+Installing from NPM downloads and builds SRT SDK and Node.js addon for your operating system × architecture.
 
 ### macOS 10.15 Catalina
 
@@ -21,11 +21,11 @@ Installing from NPM downloads and builds SRT SDK and NodeJS addon for your opera
 
 Please refer to build instructions for your OS of the [SRT project](https://github.com/Haivision/srt#requirements).
 
-This is providing a NodeJS binding layer that at its build-time assumes that plain libSRT already *can* be built on your system.
+This is providing a Node.js binding layer that at its build-time assumes that plain libSRT already *can* be built on your system.
 
-We will merely pull in an SRT codebase from a GIT repo here (that may be local or remote), and attempt to compile it (using the specific toolchain and commands invoked for each OS). See `scripts/build-srt-sdk.js`. Then linking the result of it into the compiled NodeJS add-on we provide here via the Gyp tool.
+We will merely pull in an SRT codebase from a Git repo here (that may be local or remote), and attempt to compile it (using the specific toolchain and commands invoked for each OS). See [`scripts/build-deps-srt.js`](https://github.com/Eyevinn/node-srt/blob/master/scripts/build-deps-srt.js). Then linking the result of it into the compiled Node.js add-on we provide here via the Gyp tool.
 
-Everything we need on the NodeJS side of things (N-API, Gyp) gets installed via NPM,
+Everything we need on the Node.js side of things (N-API, Gyp) gets installed via NPM,
 as you install this package.
 
 However, it is not provided with this any dependencies of building libSRT itself (we only try to invoke the toolchain correctly, whichever it is, on your OS).
@@ -40,8 +40,9 @@ We therefore refer to build instructions of SRT for all steps *prior* to invokin
 
 ## Example
 
-```
-const { SRT } = require('@eyevinn/srt');
+```javascript
+import { SRT } from '@eyevinn/srt';
+// or const { SRT } = require('@eyevinn/srt');
 
 const srt = new SRT();
 const socket = srt.createSocket();
@@ -53,34 +54,43 @@ if (fd) {
 }
 ```
 
-## API
+## Sync API
 
-```
+The following class `SRT` is implemented in [`src/node-srt.cc`](https://github.com/Eyevinn/node-srt/blob/master/src/node-srt.cc)
+and internally returned by [`src/srt.js`](https://github.com/Eyevinn/node-srt/blob/master/src/srt.js)
+and which you can get by `import { SRT } from '@eyevinn/srt';`
+
+```typescript
+enum SRTResult {
+  SRT_ERROR = -1,
+  SRT_OK = 0
+}
 class SRT {
-  createSocket(sender?:Boolean): socket:Number
-  bind(socket:Number, address:String, port:Number): result:Number
-  listen(socket:Number, backlog:Number): result:Number
-  connect(socket:Number, host:String, port:Number): result:Number
-  accept(socket:Number): fileDescriptor:Number
-  close(socket:Number): result:Number
-  read(socket:Number, chunkSize:Number): chunk:Buffer
-  write(socket:Number, chunk:Buffer): result:Number
-  setSockFlag(socket:Number, option:Number, value): result:Number
-  getSockFlag(socket:Number, option:Number): value
-  getSockState(socket:Number): value:Number
-  epollCreate(): epid:Number
-  epollAddUsock(epid:Number, socket:Number, events:Number): result:Number
-  epollUWait(epid:Number, msTimeOut:Number): events:Array
-  stats(socket:Number, clear:Boolean): stats:SRTStats
+  createSocket(sender: Boolean = false):  Number
+  bind(socket: Number, address: String, port: Number):  result: Number
+  listen(socket: Number, backlog: Number):  result: Number
+  connect(socket: Number, host: String, port: Number):  result: Number
+  accept(socket: Number):  SRTFileDescriptor // i.e. a number
+  close(socket: Number):  SRTResult // i.e. SRTResult.SRT_OK or SRTResult.SRT_ERROR (0 or -1)
+  read(socket: Number, chunkSize: Number):  chunk: Buffer
+  write(socket: Number, chunk: Buffer): SRTResult
+  setSockFlag(socket: Number, option: Number, value: Number|String|Boolean):  SRTResult
+  getSockFlag(socket: Number, option: Number):  SRTResult|Number|String|Boolean
+  getSockState(socket: Number):  SRTSockStatus // i.e. a Number; see SRTSockStatus in src/srt-api-enums.ts
+  epollCreate():  epid: Number|SRTResult.SRT_ERROR
+  epollAddUsock(epid: Number, socket: Number, events: Number):  result: Number
+  epollUWait(epid: Number, msTimeOut: Number):  Array<{socket: number, events: number}>
+  stats(socket: Number, clear: Boolean):  stats: SRTStats
 }
 ```
 
 ### Async API
 
-The N-API binding layer to the SRT SDK is such that every native call are blocking I/O and runs synchroneuosly with the wrapping JS function call. This means that these functions are called from the Node.js proc main-thread / event loop. This creates a throughput limit and in general having blocking operations can impact application performance in an unpredictable way. To address this issue we have an "async variant" of the API where the native blocking calls are put on a JS Worker thread instead (big thanks to @tchakabam for this [contribution](https://github.com/Eyevinn/node-srt/pull/6)). The Async API is a candidate to replace the main API in the next major release. Example with async/await:
+The N-API binding layer to the SRT SDK is such that every native call are blocking I/O and runs synchronously with the wrapping JS function call. This means that these functions are called from the Node.js proc main-thread / event loop. This creates a throughput limit and in general having blocking operations can impact application performance in an unpredictable way. To address this issue we have an "async variant" of the API where the native blocking calls are put on a JS Worker thread instead (big thanks to @tchakabam for this [contribution](https://github.com/Eyevinn/node-srt/pull/6)). The Async API is a candidate to replace the main API in the next major release. Example with async/await:
 
-```
-  const { SRT, AsyncSRT } = require('@eyevinn/srt');
+```javascript
+  import { SRT, AsyncSRT } from '@eyevinn/srt';
+  // or const { SRT, AsyncSRT } = require('@eyevinn/srt');
 
   (async function() {
     const asyncSrt = new AsyncSRT();
@@ -92,8 +102,9 @@ The N-API binding layer to the SRT SDK is such that every native call are blocki
 
 or with promises:
 
-```
-  const { SRT, AsyncSRT } = require('@eyevinn/srt');
+```javascript
+  import { SRT, AsyncSRT } from '@eyevinn/srt';
+  // or const { SRT, AsyncSRT } = require('@eyevinn/srt');
   const asyncSrt = new AsyncSRT();
 
   let mySocket;
@@ -127,7 +138,7 @@ connection on either side. A client connection instance can therefore just be a 
 with a successful connection state via the SRT API, and then using the reader-writer for
 any sort of transmission upon it.
 
-Also, we provide a class to allow building a server that can accept multiple incoming connections(`SRTServer` and its friend `SRTConnection`). The latter server-side connection object has the method `SRTConnection#getReaderWriter()` to allow using the reader-writer
+Also, we provide a class to allow building a server that can accept multiple incoming connections (`SRTServer` and its friend `SRTConnection`). The latter server-side connection object has the method `SRTConnection#getReaderWriter()` to allow using the reader-writer
 in order to communicate with the respective client.
 
 The best example to see all this in action at once is taking a look at the respective integration test(s).
@@ -137,10 +148,13 @@ These components also all have JSdoc annotations that should help with their usa
 ### Readable Stream
 A custom readable stream API is also available, example (in listener mode):
 
-```
-const fs = require('fs');
+```javascript
+import fs from 'fs';
+import { SRTReadStream } from '@eyevinn/srt';
+// or
+//const fs = require('fs');
+//const { SRTReadStream } = require('@eyevinn/srt');
 const dest = fs.createWriteStream('./output');
-const { SRTReadStream } = require('@eyevinn/srt');
 
 const srt = new SRTReadStream('0.0.0.0', 1234);
 srt.listen(readStream => {
@@ -148,9 +162,9 @@ srt.listen(readStream => {
 });
 ```
 
-of in caller mode:
+or in caller mode:
 
-```
+```javascript
 const srt = new SRTReadStream('127.0.0.1', 1234);
 srt.connect(readStream => {
   readStream.pipe(dest);
@@ -161,10 +175,13 @@ srt.connect(readStream => {
 
 Example of a writable stream
 
-```
-const fs = require('fs');
+```javascript
+import fs from 'fs';
+import { SRTWriteStream } from '@eyevinn/srt';
+// or
+//const fs = require('fs');
+//const { SRTWriteStream } = require('@eyevinn/srt');
 const source = fs.createReadStream('./input');
-const { SRTWriteStream } = require('@eyevinn/srt');
 
 const srt = new SRTWriteStream('127.0.0.1', 1234);
 srt.connect(writeStream => {

@@ -381,7 +381,7 @@ a string of length [10..79]'
   }
 
   epollAddUsock(epid: number, socket: number, events: number, callback?: AsyncSRTCallback) {
-    return this._createAsyncWorkPromise("epollAddUsock", [epid, socket, events], callback) as Promise<SRTResult>;
+    return this._createAsyncWorkPromise("epollAddUsock", [epid, socket, events], callback) as Promise<SRTResult/*|SRT_EINVPOLLID*/>;
   }
 
   epollUWait(epid: number, msTimeOut: number, callback?: AsyncSRTCallback) {

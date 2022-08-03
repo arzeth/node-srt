@@ -1,7 +1,7 @@
 import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockStatus } from "../src/srt-api-enums.js";
 import { SRTFileDescriptor, SRTReadReturn, SRTSockOptValue, SRTEpollResult, SRTStats } from "../src/srt-api-types.js";
 
-export class SRT {
+export class SRT { // Sync API, which is also used by AsyncSrt in `src/async-api.ts`
 
   static OK: SRTResult.SRT_OK;
   static ERROR: SRTResult.SRT_ERROR;
