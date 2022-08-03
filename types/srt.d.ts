@@ -10,6 +10,8 @@ export class SRT { // Sync API, which is also used by AsyncSrt in `src/async-api
   // TODO: add SOCKET_OPTIONS, SOCKET_STATUS enums
   //        and EPOLL_OPTS
 
+  constructor ()
+
   /**
    *
    * @param sender
