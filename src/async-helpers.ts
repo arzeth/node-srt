@@ -1,15 +1,10 @@
-function argsToString(args) {
-  const list = args
-    .map(argsItemToString).join(', ');
-  return `[${list}]`;
-}
-
-function isBufferOrTypedArray(elem) {
+function isBufferOrTypedArray(elem: any): boolean {
   return elem && elem.buffer
     && elem.buffer instanceof ArrayBuffer;
 }
 
-function argsItemToString(elem) {
+// used only by `argsToString`:
+function argsItemToString(elem: any): typeof elem|string {
   if (isBufferOrTypedArray(elem)) {
     return `${elem.constructor.name}<bytes=${elem.byteLength}>`;
   } else {
@@ -17,7 +12,17 @@ function argsItemToString(elem) {
   }
 }
 
-function traceCallToString(method, args) {
+function argsToString(args: Array<any>) {
+  const list = args
+    .map(argsItemToString).join(', ');
+  return `[${list}]`;
+}
+
+
+
+
+
+function traceCallToString(method: string, args: Array<any>) {
   return  `SRT.${method}(...${argsToString(args)});`;
 }
 
@@ -27,8 +32,8 @@ function traceCallToString(method, args) {
  * @param {any[]} args Used parameter list to extract Transferrables from
  * @returns {ArrayBuffer[]} List of transferrable objects owned by items of a parameter list
  */
-function extractTransferListFromParams(args) {
-  const transferList = args.reduce((accu, item, index) => {
+function extractTransferListFromParams(args: Array<any>): Array<ArrayBuffer> {
+  const transferList = args.reduce((accu, item, _index) => {
     if (isBufferOrTypedArray(item)) {
       accu.push(item.buffer);
     }

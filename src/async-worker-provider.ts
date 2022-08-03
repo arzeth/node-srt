@@ -14,10 +14,6 @@ const createAsyncWorker = () => {
   return _createAsyncWorker();
 };
 
-createAsyncWorker.overrideModuleScopeImpl = (func) => {
-  _createAsyncWorker = func;
-};
-
 export {
   createAsyncWorker,
   getAsyncWorkerPath,

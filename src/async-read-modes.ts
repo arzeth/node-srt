@@ -1,4 +1,5 @@
-import SRT from './srt.js';
+import { AsyncSRT } from './async-api.js';
+import { SRTResult } from './srt-api-enums.js';
 
 const READ_BUF_SIZE = 16 * 1024;
 
@@ -10,31 +11,34 @@ const READ_BUF_SIZE = 16 * 1024;
  * @param {AsyncSRT} asyncSrt
  * @param {number} socketFd
  * @param {number} minBytesRead
+ * @param {number} readBufSize
  * @param {null|Function} onRead
  * @param {null|Function} onError
  * @returns {Promise<Uint8Array[]>}
  */
-async function readChunks(asyncSrt, socketFd, minBytesRead, readBufSize = READ_BUF_SIZE,
-  onRead = null, onError = null) {
+async function readChunks (
+  asyncSrt: AsyncSRT,
+  socketFd: number,
+  minBytesRead: number,
+  readBufSize = READ_BUF_SIZE,
+  onRead: null|{(readChunk: Uint8Array): void} = null,
+  onError: null|{(err: SRTResult.SRT_ERROR|null): void} = null,
+): Promise<Uint8Array[]> {
   let bytesRead = 0;
-  const chunks = [];
+  const chunks: Uint8Array[] = [];
   let anyFailures = false;
   while (bytesRead < minBytesRead) {
     const readReturn = await asyncSrt.read(socketFd, readBufSize);
     if (readReturn instanceof Uint8Array) {
       const readBuf = readReturn;
       bytesRead += readBuf.byteLength;
-      if (onRead) {
-        onRead(readBuf);
-      }
+      onRead?.(readBuf);
       chunks.push(readBuf);
     } else if (anyFailures) {
       // evade an infinite loop
       return chunks
-    } else if (readReturn === SRT.ERROR || readReturn === null) {
-      if (onError) {
-        onError(readReturn);
-      }
+    } else if (readReturn === SRTResult.SRT_ERROR || readReturn === null) {
+      onError?.(readReturn);
     } else {
       throw new Error(`Got unexpected read-result: ${readReturn}`)
     }

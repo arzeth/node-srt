@@ -26,11 +26,14 @@ try {
 
 function run() {
 
+  if (!parentPort) throw new Error('!parentPort');
+
   DEBUG && debug('AsyncSRT: Launching task-runner');
 
   const srtNapiObjw = new SRT();
 
   DEBUG && debug('AsyncSRT: SRT native object-wrap created');
+
 
   parentPort.on('close', () => {
     DEBUG && debug('AsyncSRT: Closing task-runner');
@@ -42,10 +45,10 @@ function run() {
       throw new Error('Worker message needs `method` property');
     }
 
-    if (data.args.some((arg) => arg === undefined)) {
+    if (data.args.some((arg: any) => arg === undefined)) {
       const err = new Error(
         `Ignoring call: Can't have any arguments be undefined: ${argsToString(data.args)}`);
-      parentPort.postMessage(err);
+      parentPort!.postMessage(err);
       return;
     }
 
@@ -54,19 +57,21 @@ function run() {
     let result = 0;
     if (!DRY_RUN) {
       try {
-        result = srtNapiObjw[data.method].apply(srtNapiObjw, data.args);
+        // @ts-ignore
+        result = srtNapiObjw[data.method]
+        .apply(srtNapiObjw, data.args);
       } catch(err) {
         DEBUG && console.error(
           `Exception thrown by native binding call "${traceCallToString(data.method, data.args)}":`,
             err);
-        parentPort.postMessage({err, call: data, result: SRT.ERROR});
+        parentPort!.postMessage({err, call: data, result: SRT.ERROR});
         return;
       }
     }
 
     const transferList = extractTransferListFromParams([result]);
 
-    parentPort.postMessage({
+    parentPort!.postMessage({
       // workId: data.workId,
       timestamp: data.timestamp,
       result

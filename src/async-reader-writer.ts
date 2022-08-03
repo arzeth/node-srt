@@ -1,7 +1,7 @@
-import { AsyncSRT } from "./async-api.js";
-import { readChunks, READ_BUF_SIZE } from "./async-read-modes.js";
-import { writeChunksWithYieldingLoop } from "./async-write-modes.js";
-import { sliceBufferToChunks } from "./tools.js";
+import { AsyncSRT } from './async-api.js';
+import { readChunks, READ_BUF_SIZE } from './async-read-modes.js';
+import { writeChunksWithYieldingLoop } from './async-write-modes.js';
+import { sliceBufferToChunks } from './tools.js';
 
 export const DEFAULT_MTU_SIZE = 1316; // (for writes) should be the maximum on all IP networks cases
 export const DEFAULT_WRITES_PER_TICK = 128; // tbi
@@ -11,10 +11,12 @@ export class AsyncReaderWriter {
 
   constructor(private _asyncSrt: AsyncSRT, private _fd: number) {}
 
-  async writeChunks(buffer: Uint8Array | Buffer,
-    writesPerTick: number = DEFAULT_WRITES_PER_TICK,
+  async writeChunks(
+    buffer: Uint8Array | Buffer,
+    writesPerTick: Parameters<typeof writeChunksWithYieldingLoop>[4] = DEFAULT_WRITES_PER_TICK,
     mtuSize: number = DEFAULT_MTU_SIZE,
-    onWrite: null|Function = null): Promise<void> {
+    onWrite: Parameters<typeof writeChunksWithYieldingLoop>[3] = null,
+  ): Promise<void> {
 
     const chunks = sliceBufferToChunks(buffer, mtuSize,
       buffer.byteLength, 0);
@@ -32,10 +34,12 @@ export class AsyncReaderWriter {
    * may differ (exceed min bytes) by less than one MTU size.
    *
    */
-  async readChunks(minBytesRead: number = DEFAULT_MTU_SIZE,
-    readBufSize: number = DEFAULT_READ_BUFFER,
-    onRead: null|Function = null,
-    onError: null|Function = null): Promise<Uint8Array[]> {
+  async readChunks(
+    minBytesRead: Parameters<typeof readChunks>[2] = DEFAULT_MTU_SIZE,
+    readBufSize: Parameters<typeof readChunks>[3] = DEFAULT_READ_BUFFER,
+    onRead: Parameters<typeof readChunks>[4] = null,
+    onError: Parameters<typeof readChunks>[5] = null,
+  ): Promise<Uint8Array[]> {
     return readChunks(this._asyncSrt, this._fd, minBytesRead, readBufSize, onRead, onError);
   }
 }

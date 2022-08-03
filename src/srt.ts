@@ -1,9 +1,9 @@
-import fs from "fs";
-import path from "path";
+import fs from 'fs';
+import path from 'path';
 import __dirname from './__dirname.js';
 import { SRT as SRTClass } from '../types/srt.js';
-import { SRTResult, SRTSockOpt } from "./srt-api-enums.js";
-import { SRTFileDescriptor, SRTReadReturn, SRTSockOptValue } from "./srt-api-types.js";
+import { SRTResult, SRTSockOpt } from './srt-api-enums.js';
+import { SRTFileDescriptor, SRTReadReturn, SRTSockOptValue } from './srt-api-types.js';
 
 
 // NOTE: Very useful in combination with PKG executable bundler,

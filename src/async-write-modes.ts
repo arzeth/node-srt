@@ -1,3 +1,4 @@
+import { AsyncSRT } from './async-api.js';
 import SRT from './srt.js';
 
 /**
@@ -92,17 +93,22 @@ SOFTWARE.
  * @returns {Promise<void>}
  *
  */
-async function writeChunksWithYieldingLoop(asyncSrt, socketFd, chunks,
-  onWrite = null, writesPerTick = 1) {
+async function writeChunksWithYieldingLoop (
+  asyncSrt: AsyncSRT,
+  socketFd: number,
+  chunks: Array<Uint8Array>,
+  onWrite: null|{(sizeOfRequestedChunk: number, chunkIdx: number): void} = null,
+  writesPerTick: number = 1,
+) {
 
-  let chunkIndex = 0;
-  let chunkWrittenIdx = 0;
-  while(chunkIndex < chunks.length) await tick();
+  let chunkIndex: number = 0;
+  let chunkWrittenIdx: number = 0;
+  while (chunkIndex < chunks.length) await tick();
 
   function tick() {
     const writeResultPromises = [];
     for (let i = 0; i < writesPerTick; i++) {
-      if(chunkIndex >= chunks.length) {
+      if (chunkIndex >= chunks.length) {
         break;
       }
 
@@ -116,9 +122,7 @@ async function writeChunksWithYieldingLoop(asyncSrt, socketFd, chunks,
         if (writeRes === SRT.ERROR) {
           throw new Error('AsyncSRT.write() failed');
         }
-        if (onWrite) {
-          onWrite(writeRes, chunkWrittenIdx);
-        }
+        onWrite?.(writeRes, chunkWrittenIdx);
         chunkWrittenIdx++;
       });
 
@@ -165,11 +169,17 @@ async function writeChunksWithYieldingLoop(asyncSrt, socketFd, chunks,
  * @param {number} writesPerTick
  * @param {number} intervalMs
  */
-function writeChunksWithExplicitScheduling(asyncSrt, socketFd, chunks,
-  onWrite = null, writesPerTick = 1, intervalMs = 0) {
+function writeChunksWithExplicitScheduling(
+  asyncSrt: AsyncSRT,
+  socketFd: number,
+  chunks: Array<Uint8Array>,
+  onWrite: null|{(sizeOfRequestedChunk: number, chunkIdx: number): void} = null,
+  writesPerTick: number = 1,
+  intervalMs: number = 0,
+) {
 
-  let chunkIndex = 0;
-  let chunkWrittenIdx = 0;
+  let chunkIndex: number = 0;
+  let chunkWrittenIdx: number = 0;
 
   // schedule tick-interval
   const writeTimer = setInterval(tick, intervalMs);
@@ -192,9 +202,7 @@ function writeChunksWithExplicitScheduling(asyncSrt, socketFd, chunks,
           if (writeRes === SRT.ERROR) {
             throw new Error('AsyncSRT.write() failed');
           }
-          if (onWrite) {
-            onWrite(writeRes, chunkWrittenIdx);
-          }
+          onWrite?.(writeRes, chunkWrittenIdx);
           chunkWrittenIdx++;
         });
     }

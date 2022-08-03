@@ -1,19 +1,18 @@
-const { performance } = require("perf_hooks");
+import crypto from 'crypto';
 
-const now = performance.now;
-
-const {
+import {
   SRT, AsyncSRT, SRTServer,
   setSRTLoggingLevel,
   PayloadTools
-} = require('../../index');
+} from '../../index.js';
 
-const {
+import {
   writeChunksWithYieldingLoop,
   writeChunksWithExplicitScheduling
-} = require('../../src/async-write-modes');
+} from '../../src/async-write-modes.js';
 
-const { generateRandomBuffer } = require('./random-data-gen');
+import { performance } from 'perf_hooks';
+const now = performance.now;
 
 const LOCAL_IFACE = '127.0.0.1';
 
@@ -27,7 +26,7 @@ const CLIENT_WRITES_PER_TICK = 128;
 async function testTransmitClientToServerLoopback(localServerPort, done,
   useExplicitScheduling) {
 
-  const sourceDataBuf = generateRandomBuffer(60000);
+  const sourceDataBuf = crypto.randomBytes(60000);
 
   const packetDataSlicingStartTime = now();
 
