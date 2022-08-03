@@ -29,9 +29,9 @@ Napi::Object NodeSRT::Init(Napi::Env env, Napi::Object exports) {
     InstanceMethod("write", &NodeSRT::Write),
 
     InstanceMethod("setSockFlag", &NodeSRT::SetSockFlag),
-    //InstanceMethod("setSockOpt", &NodeSRT::SetSockFlag),
+    InstanceMethod("setSockOpt", &NodeSRT::SetSockFlag),
     InstanceMethod("getSockFlag", &NodeSRT::GetSockFlag),
-    //InstanceMethod("getSockOpt", &NodeSRT::GetSockFlag),
+    InstanceMethod("getSockOpt", &NodeSRT::GetSockFlag),
 
     InstanceMethod("getSockState", &NodeSRT::GetSockState),
     InstanceMethod("epollCreate", &NodeSRT::EpollCreate),
