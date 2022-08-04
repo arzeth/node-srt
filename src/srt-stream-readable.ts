@@ -31,7 +31,7 @@ export default class SRTReadStream extends Readable {
   public get fd () { return this._fd; }
   public get socket () { return this._socket; }
   private _fd: null|SRTFileDescriptor = null;
-  private _socket: number = 0;
+  private _socket = 0;
   private _eventPollInterval: ReturnType<typeof setInterval>|null = null;
   private _readTimer: ReturnType<typeof setTimeout>|null = null;
   // Q: opts not used ?
@@ -136,13 +136,13 @@ export default class SRTReadStream extends Readable {
     let remainingBytes = bytes;
     while(true) {
       //const buffer = this.srt.read(this._fd, bytes);
-      let buffer
+      let buffer;
       try {
         buffer = this.srt.read(this._fd, bytes);
       } catch (e) {
-        console.log(JSON.stringify(e))
-        console.error(e)
-        console.error('error.name=%O', (e as any).name)
+        console.log(JSON.stringify(e));
+        console.error(e);
+        console.error('error.name=%O', (e as any).name);
         this.close();
         break;
       }

@@ -13,11 +13,11 @@ import vparse from 'vparse';
 import __dirname from '../src/__dirname.js';
 
 const env = process.env;
-const DEBUG = !!+env.DEBUG || process.argv.includes('--debug')
+const DEBUG = !!+env.DEBUG || process.argv.includes('--debug');
 
 const SRT_REPO = env.NODE_SRT_REPO || "https://github.com/Haivision/srt.git";
 //const SRT_CHECKOUT = "v1.5.0";
-const SRT_CHECKOUT = "e48f43d546457f3386702d032d7d7e08cd0a5b19"
+const SRT_CHECKOUT = "e48f43d546457f3386702d032d7d7e08cd0a5b19";
 // ^ 2022-08-03
 // https://github.com/Haivision/srt/commit/e48f43d546457f3386702d032d7d7e08cd0a5b19
 

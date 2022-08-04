@@ -98,11 +98,11 @@ async function writeChunksWithYieldingLoop (
   socketFd: number,
   chunks: Array<Uint8Array>,
   onWrite: null|{(sizeOfRequestedChunk: number, chunkIdx: number): void} = null,
-  writesPerTick: number = 1,
+  writesPerTick = 1,
 ) {
 
-  let chunkIndex: number = 0;
-  let chunkWrittenIdx: number = 0;
+  let chunkIndex = 0;
+  let chunkWrittenIdx = 0;
   while (chunkIndex < chunks.length) await tick();
 
   function tick() {
@@ -174,12 +174,12 @@ function writeChunksWithExplicitScheduling(
   socketFd: number,
   chunks: Array<Uint8Array>,
   onWrite: null|{(sizeOfRequestedChunk: number, chunkIdx: number): void} = null,
-  writesPerTick: number = 1,
-  intervalMs: number = 0,
+  writesPerTick = 1,
+  intervalMs = 0,
 ) {
 
-  let chunkIndex: number = 0;
-  let chunkWrittenIdx: number = 0;
+  let chunkIndex = 0;
+  let chunkWrittenIdx = 0;
 
   // schedule tick-interval
   const writeTimer = setInterval(tick, intervalMs);

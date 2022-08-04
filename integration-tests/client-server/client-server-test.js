@@ -64,7 +64,7 @@ async function testTransmitClientToServerLoopback(localServerPort, done,
     asyncSrtServer.socket);
 
   function onClientConnected(connection) {
-    console.log('Got new connection:', connection.fd)
+    console.log('Got new connection:', connection.fd);
 
     let bytesRead = 0;
     let firstByteReadTime;
@@ -83,27 +83,28 @@ async function testTransmitClientToServerLoopback(localServerPort, done,
         bytesExpectedToRead,
         READ_BUF_SIZE,
         (readBuf) => {
-        if (!firstByteReadTime) {
-          firstByteReadTime = now();
+          if (!firstByteReadTime) {
+            firstByteReadTime = now();
+          }
+          //console.log('Read buffer of size:', readBuf.byteLength)
+          bytesRead += readBuf.byteLength;
+        }, (errRes) => {
+          console.log('Error reading, got result:', errRes);
         }
-        //console.log('Read buffer of size:', readBuf.byteLength)
-        bytesRead += readBuf.byteLength;
-      }, (errRes) => {
-        console.log('Error reading, got result:', errRes);
-      });
+      );
       onReadDone(chunks);
     }
 
     function onReadDone(chunks) {
       const readDoneTime = now();
       const readTimeDiffMs = readDoneTime - serverConnectionAcceptTime;
-      const readBandwidthEstimKbps = (8 * (bytesExpectedToRead / readTimeDiffMs))
+      const readBandwidthEstimKbps = (8 * (bytesExpectedToRead / readTimeDiffMs));
       console.log('Done reading stream, took millis:', readTimeDiffMs, 'for kbytes:~',
-      (bytesSentCount / 1000), 'of', (bytesExpectedToRead / 1000));
-      console.log('Estimated read-bandwidth (kb/s):', readBandwidthEstimKbps.toFixed(3))
+        (bytesSentCount / 1000), 'of', (bytesExpectedToRead / 1000));
+      console.log('Estimated read-bandwidth (kb/s):', readBandwidthEstimKbps.toFixed(3));
       console.log('First-byte-write-to-read latency millis:',
-        firstByteReadTime - clientWriteStartTime)
-      console.log('End-to-end transfer latency millis:', readDoneTime - clientWriteStartTime)
+        firstByteReadTime - clientWriteStartTime);
+      console.log('End-to-end transfer latency millis:', readDoneTime - clientWriteStartTime);
       console.log('Client-side writing took millis:',
         clientWriteDoneTime - clientWriteStartTime);
 
@@ -133,7 +134,7 @@ async function testTransmitClientToServerLoopback(localServerPort, done,
       throw new Error('client connect failed');
     }
 
-    console.log('connect result:', result)
+    console.log('connect result:', result);
 
     clientWriteStartTime = now();
 
@@ -160,4 +161,4 @@ async function testTransmitClientToServerLoopback(localServerPort, done,
 
 module.exports = {
   testTransmitClientToServerLoopback
-}
+};

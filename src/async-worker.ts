@@ -59,11 +59,11 @@ function run() {
       try {
         // @ts-ignore
         result = srtNapiObjw[data.method]
-        .apply(srtNapiObjw, data.args);
+          .apply(srtNapiObjw, data.args);
       } catch(err) {
         DEBUG && console.error(
           `Exception thrown by native binding call "${traceCallToString(data.method, data.args)}":`,
-            err);
+          err);
         parentPort!.postMessage({err, call: data, result: SRT.ERROR});
         return;
       }

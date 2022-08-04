@@ -1,5 +1,5 @@
-import crypto from 'crypto'
-import { performance } from 'perf_hooks'
+import crypto from 'crypto';
+import { performance } from 'perf_hooks';
 
 import { SRT, AsyncSRT, SRTServer } from '../build/index.js';
 
@@ -38,7 +38,7 @@ async function transmitClientToServerLoopback(serverPort, done, useExplicitSched
   const txShouldSendBytes = Math.min(numChunks * chunkMaxSize, txSourceData.byteLength);
   const txChunks = sliceBufferToChunks(txSourceData, chunkMaxSize, txShouldSendBytes);
 
-  log('preparingBeforeStartingSrt took millis', now() - preparingBeforeStartingSrtStartedOn)
+  log('preparingBeforeStartingSrt took millis', now() - preparingBeforeStartingSrtStartedOn);
 
   // we need two instances of task-runners here,
   // because otherwise awaiting server accept
@@ -119,18 +119,18 @@ async function transmitClientToServerLoopback(serverPort, done, useExplicitSched
 
       //log(`Started to validate ${rxChunks.length} received chunks`); // very long to wait
 
-      const bufferComparingStartedOn = now()
+      const bufferComparingStartedOn = now();
       for (let i = 0; i < rxChunks.length; i++) {
         // commented because it takes ~5 minutes for .toStrictEqual to compare all of them
         //expect(txChunks[i]).toStrictEqual(rxChunks[i]);
         expect(Buffer.compare(txChunks[i], rxChunks[i])).toStrictEqual(0);
       }
-      log('validating buffers (it was done by this test itself) took millis:', now() - bufferComparingStartedOn)
+      log('validating buffers (it was done by this test itself) took millis:', now() - bufferComparingStartedOn);
       //expect(txChunks).toStrictEqual(rxChunks);
       //log('Completed validating them.');
 
       {
-        const disposingStartedOn = now()
+        const disposingStartedOn = now();
         //log('closing');
         //log(`${connection.fd} ${clientSideSocket}`)
         //await srtHandle.close(connection.fd);
@@ -146,8 +146,8 @@ async function transmitClientToServerLoopback(serverPort, done, useExplicitSched
         await srtServer.dispose();
         //log('closing 6');
         //await srtHandle.dispose();
-        log('disposing took millis:', now() - disposingStartedOn)
-        log('total test:', now() - creatingSrtStartedOn, 'or', now() - preparingBeforeStartingSrtStartedOn)
+        log('disposing took millis:', now() - disposingStartedOn);
+        log('total test:', now() - creatingSrtStartedOn, 'or', now() - preparingBeforeStartingSrtStartedOn);
       }
 
       done();

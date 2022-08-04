@@ -11,7 +11,7 @@ const char = 0;
 let recvBytes = 0;
 let sentBytes = 0;
 
-new Promise<void>(async (resolve, reject) => {
+new Promise<void>(async (resolve, reject) => { // FIXME: why is it `new Promise()`?
 
   const srtServer: SRTServer = new SRTServer(8002, '127.0.0.1');
   srtServer.on('connection', onConnectionServer);

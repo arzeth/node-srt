@@ -36,11 +36,11 @@ async function readChunks (
       chunks.push(readBuf);
     } else if (anyFailures) {
       // evade an infinite loop
-      return chunks
+      return chunks;
     } else if (readReturn === SRTResult.SRT_ERROR || readReturn === null) {
       onError?.(readReturn);
     } else {
-      throw new Error(`Got unexpected read-result: ${readReturn}`)
+      throw new Error(`Got unexpected read-result: ${readReturn}`);
     }
   }
   return chunks;

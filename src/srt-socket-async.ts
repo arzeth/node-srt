@@ -42,14 +42,14 @@ export abstract class SRTSocketAsync extends EventEmitter {
     if (true === this._startedToDispose) {
       console.error('SRTSocketAsync:: create():: already started to dispose; returning null');
       // @ts-ignore
-      return null
+      return null;
     }
     this._socket = await this.asyncSrt.createSocket() as number;
     this.emit('created');
     return this;
   }
 
-  protected _startedToDispose: boolean = false;
+  protected _startedToDispose = false;
   public get startedToDispose () { return this._startedToDispose; }
   /**
    * Closes the socket and disposes of the internal async handle (in this order).
@@ -120,7 +120,7 @@ export abstract class SRTSocketAsync extends EventEmitter {
     if (true === this._startedToDispose) {
       console.error('SRTSocketAsync:: open():: already started to dispose; returning null');
       // @ts-ignore
-      return null
+      return null;
     }
     return this._open();
   }

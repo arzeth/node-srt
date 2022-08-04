@@ -6,13 +6,13 @@ import { SRTFileDescriptor } from './srt-api-types.js';
 const debug = _debug('srt-write-stream');
 
 export default class SRTWriteStream extends Writable implements SRTCallerState {
-  public srt: SRT
+  public srt: SRT;
   public get address () { return this._address; }
   public get port () { return this._port; }
   public get fd () { return this._fd; }
   public get socket () { return this._socket; }
-  private _fd: null|SRTFileDescriptor = null
-  private _socket: number = 0;
+  private _fd: null|SRTFileDescriptor = null;
+  private _socket = 0;
   constructor(
     private _address: string,
     private _port: number,

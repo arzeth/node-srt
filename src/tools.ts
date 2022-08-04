@@ -10,7 +10,7 @@ export function sliceBufferToChunks(
   srcData: Buffer | Uint8Array,
   chunkMaxSize: number,
   byteLength: number = srcData.byteLength,
-  initialOffset: number = 0
+  initialOffset = 0,
 ): Array<Uint8Array> {
 
   const chunks = [];
@@ -68,7 +68,7 @@ export function copyChunksIntoBuffer(chunks: Array<Uint8Array>, targetBuffer?: B
 
 // The following function is under MIT-0 (The MIT No Attribution License), author: Arzet Ro <arzeth0@gmail.com>
 export function isSafeFloat (n: any): boolean {
-  return typeof n === 'number' && n >= Number.MIN_SAFE_INTEGER && n <= Number.MAX_SAFE_INTEGER
+  return typeof n === 'number' && n >= Number.MIN_SAFE_INTEGER && n <= Number.MAX_SAFE_INTEGER;
 }
 
 // The following function is under MIT-0 (The MIT No Attribution License), author: Arzet Ro <arzeth0@gmail.com>
@@ -81,7 +81,7 @@ export async function wait (msecs: number): Promise<void> {
     }
     msecs = isSafeFloat(msecs) ? +msecs : 0;
     setTimeout(resolve, msecs);
-  })
+  });
 }
 
 
@@ -138,8 +138,8 @@ export async function waitForCondition (
   const timeoutOn = (opts.timeoutOn! > 0 ? opts.timeoutOn! : Infinity);
   // PCs can suspend,
   // that's why here's no "timeoutOn = min(timeoutOn, Date.now() + timeoutIn)"
-  let i: number = 1;
-  let resolved: boolean = false;
+  let i = 1;
+  let resolved = false;
   const executedTimeOnStart: number = performance.now();
   return new Promise(async (resolve) => {
     if (typeof timeoutOn === 'number' && Date.now() > timeoutOn)
@@ -148,11 +148,11 @@ export async function waitForCondition (
     }
     const timeout = (
       timeoutIn === Infinity && timeoutOn === Infinity
-      ? null
-      : setTimeout(() => {
-        resolved = true;
-        resolve(-i);
-      }, Math.min(Date.now() + timeoutIn, timeoutOn))
+        ? null
+        : setTimeout(() => {
+          resolved = true;
+          resolve(-i);
+        }, Math.min(Date.now() + timeoutIn, timeoutOn))
     );
     for (; i <= maxAttempts; i++) {
       if (resolved === true) return;
@@ -188,5 +188,5 @@ export async function waitForCondition (
     }
     clearTimeout(timeout!);
     return resolve(-maxAttempts);
-  })
+  });
 }

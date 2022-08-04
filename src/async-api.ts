@@ -9,7 +9,7 @@ import { SRTLoggingLevel, SRTResult, SRTSockOpt, SRTSockOptDetalizedR, SRTSockOp
 
 import { traceCallToString, extractTransferListFromParams } from './async-helpers.js';
 import { createAsyncWorker } from './async-worker-provider.js';
-import { waitForCondition, wait } from "./tools.js";
+import { waitForCondition } from "./tools.js";
 
 const DEFAULT_PROMISE_TIMEOUT_MS = 3000;
 
@@ -107,7 +107,7 @@ export class AsyncSRT {
     return !this._worker;
   }
 
-  private _startedToDispose: boolean = false;
+  private _startedToDispose = false;
   public get startedToDispose () { return this._startedToDispose; }
   private workerTerminatedWithErrorCode: number|undefined = void 0;
   /**
@@ -119,8 +119,8 @@ export class AsyncSRT {
       console.warn('async-api.ts:: dispose:: was already called');
       return (
         void 0 === this.workerTerminatedWithErrorCode
-        ? NaN
-        : this.workerTerminatedWithErrorCode
+          ? NaN
+          : this.workerTerminatedWithErrorCode
       );
     }
     DEBUG && debug(this._id, 'dispose');
@@ -132,7 +132,7 @@ export class AsyncSRT {
       await waitForCondition(() => {
         console.log('_createAsyncWorkPromiseLockLevel = %O', this._createAsyncWorkPromiseLockLevel);
         return this._createAsyncWorkPromiseLockLevel <= 0;
-      })
+      });
     }
     const worker = this._worker;
     this._worker = null;
@@ -189,11 +189,11 @@ export class AsyncSRT {
     this._worker?.postMessage(msgData, transferList);
   }
 
-  private _createAsyncWorkPromiseLockLevel: number = 0;
+  private _createAsyncWorkPromiseLockLevel = 0;
   private _createAsyncWorkPromise(method: string,
     args: any[] = [],
     callback?: AsyncSRTCallback,
-    useTimeout: boolean = false,
+    useTimeout = false,
     timeoutMs: number = AsyncSRT.TimeoutMs): AsyncSRTPromise {
 
     if (this.isDisposed()) {
@@ -208,7 +208,7 @@ export class AsyncSRT {
         method, args,
       );
       // @ts-ignore
-      return // fixme: or Promise.reject? or Promise.resolve(null)?
+      return; // fixme: or Promise.reject? or Promise.resolve(null)?
     }
     this._createAsyncWorkPromiseLockLevel++;
 
@@ -230,9 +230,8 @@ export class AsyncSRT {
           // and users can manage this aspect themselves when using plain callbacks.
           try {
             callback?.(result);
-          } catch (e)
-          {
-            console.error(e)
+          } catch (e) {
+            console.error(e);
           }
           return;
         } else if (useTimeout) clearTimeout(timeout!);
@@ -279,7 +278,7 @@ export class AsyncSRT {
     return this._createAsyncWorkPromise("connect", [socket, host, port], callback);
   }
 
-  accept(socket: number, callback?: AsyncSRTCallback, useTimeout: boolean = false, timeoutMs = AsyncSRT.TimeoutMs) {
+  accept(socket: number, callback?: AsyncSRTCallback, useTimeout = false, timeoutMs = AsyncSRT.TimeoutMs) {
     return this._createAsyncWorkPromise("accept", [socket], callback, useTimeout, timeoutMs);
   }
 
@@ -353,7 +352,7 @@ a string of length [10..79]'
     return this._createAsyncWorkPromise("setSockFlag", [socket, option, value], callback) as Promise<SRTResult>;
   }
   setSockOpt(...args: Parameters<AsyncSRT['setSockFlag']>) {
-    return this.setSockFlag(...args)
+    return this.setSockFlag(...args);
   }
 
   // those which have R in https://github.com/Haivision/srt/blob/master/docs/API/API-socket-options.md#list-of-options?

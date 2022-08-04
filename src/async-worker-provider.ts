@@ -6,12 +6,8 @@ const ASYNC_WORKER_PATH = './async-worker.js';
 
 const getAsyncWorkerPath = () => path.resolve(__dirname, ASYNC_WORKER_PATH);
 
-let _createAsyncWorker = () => {
-  return new Worker(getAsyncWorkerPath());
-};
-
 const createAsyncWorker = () => {
-  return _createAsyncWorker();
+  return new Worker(getAsyncWorkerPath());
 };
 
 export {
